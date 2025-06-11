@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>Your Quest Theme: {{ theme }}</h2>
+    <ul>
+        {% for step in steps %}
+            <li>
+                <strong>{{ step.name }}</strong>: {{ step.description }}
+                <button onclick="completeQuest({{ step.id }})">Complete</button>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="quest-course-container">
+  <aside class="quest-list">
+    <h3>코스 {{ theme }}</h3>
+    <ul>
+      {% for step in steps %}
+      <li class="quest-card">
+        <strong>{{ step.id }}.</strong> {{ step.title }}
+      </li>
+      {% endfor %}
+    </ul>
+  </aside>
+  <section class="map-placeholder">
+    <p>여기에 지도가 표시됩니다</p>
+  </section>
+</div>
+{% endblock %}
