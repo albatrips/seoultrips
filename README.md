@@ -7,7 +7,20 @@ git clone https://github.com/albatrips/seoultrips.git
 
 cd seoultrips
 
+uv init
+
+uv venv --python 12.3
+
+source .venv/bin/activate
+
+uv add -r requirements.txt
+
+uv run server/app.py
+
 ```
+
+run 문제없이 성공하면 8000포트에서 template으로 html바로 볼 수 있음
+  API 각자 개발할것들 작업하면서 보시길
 
 ## 규칙
 
