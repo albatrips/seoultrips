@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import uvicorn
-from api.recommend import router as recommend_router
+from server.api.recommend import router as recommend_router
+#from api.recommend import router as recommend_router
 from fastapi.middleware.cors import CORSMiddleware
 # FastAPI 애플리케이션 생성
 app = FastAPI()
@@ -47,3 +48,18 @@ if __name__ == "__main__":
     import uvicorn
     # app 인스턴스를 직접 전달
     uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+# 네이버 맵
+# server/app.py
+
+from flask import Flask, render_template
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return "Hello Voice Quest!"
+
+@app.route("/map")
+def map_view():
+    return render_template("naver_map.html")

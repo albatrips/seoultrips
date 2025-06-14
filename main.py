@@ -1,6 +1,15 @@
-def main():
-    print("Hello from seoultrips!")
 
+from server.app import app
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)
+    
+#def main():
+#    print("Hello from seoultrips!")
+
+
+#if __name__ == "__main__":
+#    main()
+    
+
+
