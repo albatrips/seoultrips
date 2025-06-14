@@ -2,16 +2,29 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>MicroQuest</title>
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <title>Voice Quest</title>
+  <!-- ✅ 오타 수정된 네이버 지도 API -->
+<script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=bfo3zjan3s"></script>
+  <style>
+    .quest-course-container {
+      display: flex;
+    }
+    .quest-list {
+      width: 30%;
+      padding: 1rem;
+      background: #f5f5f5;
+    }
+    .map-placeholder {
+      width: 70%;
+      height: 500px;
+      background-color: #e0e0e0;
+    }
+    .quest-card {
+      margin-bottom: 8px;
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>MicroQuest</h1>
-  </header>
-  <main>
-    {% block content %}{% endblock %}
-  </main>
-  <script src="/static/js/main.js"></script>
+  {% block content %}{% endblock %}
 </body>
 </html>
