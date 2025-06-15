@@ -40,8 +40,22 @@
         });
 
         const infoWindow = new naver.maps.InfoWindow({
-          content: `<div style="padding:8px; font-size:14px;">${step.title}</div>`
-        });
+  content: `
+    <div style="
+      background: white;
+      border: 2px solid #ff8800;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-weight: bold;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+    ">
+      📍 ${step.title}
+    </div>
+  `,
+  backgroundColor: "transparent",  // 기본 배경 제거
+  borderColor: "transparent",      // 기본 테두리 제거
+  disableAnchor: true              // 말풍선 꼬리 없애기
+});
 
         // 마우스 hover로 툴팁 표시
         naver.maps.Event.addListener(marker, "mouseover", function () {
@@ -62,15 +76,18 @@
       card.addEventListener("click", function () {
         const { marker, infoWindow, position } = markers[index];
         map.panTo(position); // 지도 이동
-
-        // 선택된 마커 툴팁 표시
         infoWindow.open(map, marker);
 
-        // 2초 후 자동 닫기 (선택)
+        // ✅ 기존 강조 제거 + 새로 강조
+        cards.forEach(c => c.classList.remove("active"));  // 모든 카드 강조 제거
+        card.classList.add("active");                      // 현재 카드 강조
+
+        // (선택) 툴팁 2초 후 자동 닫기
         setTimeout(() => infoWindow.close(), 2000);
       });
     });
   });
+  cards[0].click();
 </script>
 
 {% endblock %}
