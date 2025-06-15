@@ -36,7 +36,7 @@ async def quest_course(request: Request, theme: str = "추천 코스"):
     steps = [
         {"id": 1, "title": "A 명소 방문", "lat": 37.579617, "lng": 126.977041},
         {"id": 2, "title": "B 거리 걷기", "lat": 37.580146, "lng": 126.976892},
-        {"id": 3, "title": "C 카페 인증", "lat": 37.580146, "lng": 126.976892}
+        {"id": 3, "title": "C 카페 인증", "lat": 37.579617, "lng": 126.977041}
     ]
     return templates.TemplateResponse("quest_course.html", {
         "request": request,
