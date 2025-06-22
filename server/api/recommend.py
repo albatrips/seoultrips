@@ -145,4 +145,5 @@ async def custom_submit(
         "description": "사용자 지정 퀘스트입니다."
     }
     request.app.state.current_quests = [custom_step]
-    return RedirectResponse(url="/quest", status_code=302)
+    return RedirectResponse(url="/api/quest", status_code=302)
+
