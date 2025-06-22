@@ -2,16 +2,84 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>MicroQuest</title>
-  <link rel="stylesheet" href="/static/css/styles.css">
+  <title>Voice Quest</title>
+  <!-- ✅ 오타 수정된 네이버 지도 API -->
+<script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=bfo3zjan3s"></script>
+  <style>
+  .quest-course-container {
+    display: flex;
+  }
+
+  .quest-list {
+    width: 30%;
+    padding: 1rem;
+    background: #f9f9f9;
+    overflow-y: auto;
+  }
+
+  .map-placeholder {
+    width: 70%;
+    height: 500px;
+    background-color: #e0e0e0;
+  }
+
+  .quest-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .quest-card-ui {
+    display: flex;
+    align-items: center;
+    background: #fff4e6;
+    border-radius: 10px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease-in-out;
+  }
+
+  .quest-card-ui:hover {
+    background: #ffe9cc;
+    transform: translateY(-2px);
+  }
+
+  .circle-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ff6b6b;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-right: 1rem;
+  }
+
+  .card-info .title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 4px;
+  }
+
+  .card-info .coords {
+    font-size: 0.85rem;
+    color: #555;
+
+  .quest-card-ui.active {
+    background: #ffdf91;
+    border: 2px solid #ff8800;
+    transform: translateY(-2px);
+}
+
+    
+  }
+</style>
+
 </head>
 <body>
-  <header>
-    <h1>MicroQuest</h1>
-  </header>
-  <main>
-    {% block content %}{% endblock %}
-  </main>
-  <script src="/static/js/main.js"></script>
+  {% block content %}{% endblock %}
 </body>
 </html>
