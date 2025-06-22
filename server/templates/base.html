@@ -95,7 +95,7 @@
     }
   </style>
 </head>
-<body>
+<body {% block body_attrs %}{% endblock %}>
   {% block content %}{% endblock %}
 </body>
 </html>

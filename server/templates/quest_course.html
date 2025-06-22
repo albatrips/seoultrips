@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
+{% block body_attrs %}data-redirect-url="/"{% endblock %}
+
 <div class="quest-course-container">
   <aside class="quest-list">
     <h3>코스 {{ theme }}</h3>
@@ -185,6 +187,22 @@
       modal.style.display = "none";
       selectedQuestId = null;
     });
+  });
+
+  // 새로고침 시 이전 페이지로 리다이렉트
+  window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const fromRecommend = params.get("from_recommend");
+
+    if (fromRecommend === "1") {
+      const redirectTo = document.body.dataset.redirectUrl || "/";
+      if (sessionStorage.getItem("redirectedFromRecommend")) {
+        sessionStorage.removeItem("redirectedFromRecommend");
+        window.location.href = redirectTo;
+      } else {
+        sessionStorage.setItem("redirectedFromRecommend", "true");
+      }
+    }
   });
 </script>
 
