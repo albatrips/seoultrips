@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
+
 <div class="quest-course-container">
   <aside class="quest-list">
-    <h3>코스 {{ theme }}</h3>
+    <h3>코스 추천 코스</h3>
     <div class="quest-card-list">
       {% for step in steps %}
       <div class="quest-card-ui">
-        <div class="circle-number">{{ step.id }}</div>
+        <div class="circle-number">{{ loop.index }}</div>
         <div class="card-info">
           <div class="title">{{ step.title }}</div>
           <div class="coords">📍 {{ step.lat }}, {{ step.lng }}</div>
@@ -14,9 +15,10 @@
       </div>
       {% endfor %}
     </div>
+    <button class="refresh-button" onclick="location.reload()">🔄 새로고침</button>
   </aside>
 
-  <section id="map" class="map-placeholder" style="width: 100%; height: 500px;"></section>
+  <section id="map" class="map-placeholder"></section>
 </div>
 
 <script>
@@ -27,7 +29,7 @@
     });
 
     const steps = {{ steps | tojson | safe }};
-    const markers = [];  // 마커 저장용
+    const markers = [];
 
     steps.forEach(function(step, index) {
       if (step.lat && step.lng) {
@@ -40,24 +42,15 @@
         });
 
         const infoWindow = new naver.maps.InfoWindow({
-  content: `
-    <div style="
-      background: white;
-      border: 2px solid #ff8800;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-weight: bold;
-      box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-    ">
-      📍 ${step.title}
-    </div>
-  `,
-  backgroundColor: "transparent",  // 기본 배경 제거
-  borderColor: "transparent",      // 기본 테두리 제거
-  disableAnchor: true              // 말풍선 꼬리 없애기
-});
+          content: `
+            <div style="background:white; border:2px solid #ff8800; border-radius:8px; padding:8px 12px; font-weight:bold; box-shadow:2px 2px 6px rgba(0,0,0,0.3);">
+              📍 ${step.title}
+            </div>`,
+          backgroundColor: "transparent",
+          borderColor: "transparent",
+          disableAnchor: true
+        });
 
-        // 마우스 hover로 툴팁 표시
         naver.maps.Event.addListener(marker, "mouseover", function () {
           infoWindow.open(map, marker);
         });
@@ -65,29 +58,29 @@
           infoWindow.close();
         });
 
-        // 마커 저장
         markers.push({ marker, infoWindow, position });
       }
     });
 
-    // 💡 왼쪽 카드 클릭 이벤트 연결
     const cards = document.querySelectorAll(".quest-card-ui");
     cards.forEach((card, index) => {
       card.addEventListener("click", function () {
         const { marker, infoWindow, position } = markers[index];
-        map.panTo(position); // 지도 이동
+        map.setZoom(17);
+        map.panTo(position);
         infoWindow.open(map, marker);
 
-        // ✅ 기존 강조 제거 + 새로 강조
-        cards.forEach(c => c.classList.remove("active"));  // 모든 카드 강조 제거
-        card.classList.add("active");                      // 현재 카드 강조
+        cards.forEach(c => c.classList.remove("active"));
+        card.classList.add("active");
 
-        // (선택) 툴팁 2초 후 자동 닫기
         setTimeout(() => infoWindow.close(), 2000);
       });
     });
+
+    if (cards.length > 0) {
+      setTimeout(() => cards[0].click(), 300);
+    }
   });
-  cards[0].click();
 </script>
 
 {% endblock %}
