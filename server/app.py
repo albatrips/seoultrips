@@ -6,7 +6,6 @@ from server.api.recommend import router as recommend_router
 
 app = FastAPI()
 
-# CORS 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:8000"],
@@ -15,19 +14,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 정적 파일 & 템플릿
 app.mount("/static", StaticFiles(directory="server/static"), name="static")
 templates = Jinja2Templates(directory="server/templates")
 
-# 라우터 등록 (prefix 없이)
-app.include_router(recommend_router)
+app.include_router(recommend_router, prefix="/api")
 
-# 초기 진입 페이지
 @app.get("/")
 async def show_categories(request: Request):
     return templates.TemplateResponse("category.html", {"request": request})
 
-# 기본 퀘스트 코스용 라우트 (임시용)
 @app.get("/quest")
 async def quest_course(request: Request, theme: str = "추천 코스"):
     steps = [

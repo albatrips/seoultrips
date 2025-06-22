@@ -1,43 +1,56 @@
-{% extends "base.html" %}
-{% block content %}
-
-<div style="padding: 2rem; max-width: 720px; margin: 0 auto;">
-  <h2 style="font-size: 2rem; font-weight: bold; margin-bottom: 1.5rem; color: #333;">
-    🎯 퀘스트 상세 정보
-  </h2>
-
-  <div style="
-    background: #fff4e6;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-  ">
-    <h3 style="font-size: 1.5rem; color: #ff6b6b; margin-bottom: 0.5rem;">
-      {{ quest.title }}
-    </h3>
-    <p style="font-size: 1rem; color: #444; margin-bottom: 1rem;">
-      {{ quest.description }}
-    </p>
-
-    <div style="font-size: 0.95rem; color: #666;">
-      <strong>좌표:</strong> 📍 {{ quest.lat }}, {{ quest.lng }}
-    </div>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ quest.title }}</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #fff9ec;
+      padding: 2rem;
+    }
+    .detail-container {
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      max-width: 600px;
+      margin: auto;
+    }
+    h2 {
+      color: #ff6f00;
+      margin-bottom: 1rem;
+    }
+    .coords {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 1rem;
+    }
+    .description {
+      font-size: 1.1rem;
+      line-height: 1.5;
+    }
+    .back-button {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 0.6rem 1.2rem;
+      background-color: #ff8800;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      text-decoration: none;
+    }
+    .back-button:hover {
+      background-color: #e66b00;
+    }
+  </style>
+</head>
+<body>
+  <div class="detail-container">
+    <h2>{{ quest.title }}</h2>
+    <div class="coords">📍 위치: 위도 {{ quest.lat }}, 경도 {{ quest.lng }}</div>
+    <div class="description">{{ quest.description }}</div>
+    <a href="/quest" class="back-button">← 돌아가기</a>
   </div>
-
-  <button onclick="history.back()" style="
-    background-color: #ff8800;
-    color: white;
-    padding: 10px 16px;
-    font-weight: bold;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
-  ">
-    ⬅ 이전으로
-  </button>
-</div>
-
-{% endblock %}
+</body>
+</html>

@@ -3,10 +3,10 @@
 
 <div class="quest-course-container">
   <aside class="quest-list">
-    <h3>코스 추천 코스</h3>
+    <h3>코스 {{ theme }}</h3>
     <div class="quest-card-list">
       {% for step in steps %}
-      <div class="quest-card-ui" data-step-id="{{ step.id }}" data-title="{{ step.title }}" data-lat="{{ step.lat }}" data-lng="{{ step.lng }}">
+      <div class="quest-card-ui" data-index="{{ loop.index0 }}" data-id="{{ step.id }}" data-title="{{ step.title }}">
         <div class="circle-number">{{ loop.index }}</div>
         <div class="card-info">
           <div class="title">{{ step.title }}</div>
@@ -22,16 +22,76 @@
 </div>
 
 <!-- ✅ 모달 -->
-<div id="confirmModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.4); z-index:9999; justify-content:center; align-items:center;">
-  <div style="background:white; padding:2rem; border-radius:12px; min-width:300px; max-width:400px; box-shadow:0 4px 10px rgba(0,0,0,0.3); position:relative;">
-    <h3 id="modalQuestTitle"></h3>
-    <p style="margin:1rem 0;">이 퀘스트로 진행하시겠습니까?</p>
-    <div style="display:flex; justify-content:space-between; margin-top:1.5rem;">
-      <button onclick="cancelModal()" style="background:gray; color:white; padding:8px 16px; border:none; border-radius:6px;">취소</button>
-      <button id="confirmBtn" style="background:#ff8800; color:white; padding:8px 16px; border:none; border-radius:6px;">확인</button>
+<div id="quest-modal" class="modal">
+  <div class="modal-content">
+    <p id="modal-text" class="modal-text">이 퀘스트를 진행하시겠습니까?</p>
+    <div class="modal-buttons">
+      <button id="confirm-btn" class="confirm-btn">✅ 진행</button>
+      <button id="cancel-btn" class="cancel-btn">❌ 취소</button>
     </div>
   </div>
 </div>
+
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+  }
+
+  .modal-text {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-buttons {
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .confirm-btn, .cancel-btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .confirm-btn {
+    background: #ff8800;
+    color: white;
+  }
+
+  .confirm-btn:hover {
+    background: #e67800;
+  }
+
+  .cancel-btn {
+    background: #ccc;
+  }
+
+  .cancel-btn:hover {
+    background: #bbb;
+  }
+</style>
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -42,8 +102,9 @@
 
     const steps = {{ steps | tojson | safe }};
     const markers = [];
+    let selectedQuestId = null;
 
-    steps.forEach(function(step) {
+    steps.forEach(function(step, index) {
       if (step.lat && step.lng) {
         const position = new naver.maps.LatLng(step.lat, step.lng);
 
@@ -55,7 +116,14 @@
 
         const infoWindow = new naver.maps.InfoWindow({
           content: `
-            <div style="background:white; border:2px solid #ff8800; border-radius:8px; padding:8px 12px; font-weight:bold; box-shadow:2px 2px 6px rgba(0,0,0,0.3);">
+            <div style="
+              background: white;
+              border: 2px solid #ff8800;
+              border-radius: 8px;
+              padding: 8px 12px;
+              font-weight: bold;
+              box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+            ">
               📍 ${step.title}
             </div>`,
           backgroundColor: "transparent",
@@ -63,41 +131,51 @@
           disableAnchor: true
         });
 
-        naver.maps.Event.addListener(marker, "mouseover", () => infoWindow.open(map, marker));
-        naver.maps.Event.addListener(marker, "mouseout", () => infoWindow.close());
-
         markers.push({ marker, infoWindow, position });
       }
     });
 
     const cards = document.querySelectorAll(".quest-card-ui");
-    const modal = document.getElementById("confirmModal");
-    const modalTitle = document.getElementById("modalQuestTitle");
-    const confirmBtn = document.getElementById("confirmBtn");
+    const modal = document.getElementById("quest-modal");
+    const confirmBtn = document.getElementById("confirm-btn");
+    const cancelBtn = document.getElementById("cancel-btn");
+    const modalText = document.getElementById("modal-text");
 
-    let selectedStepId = null;
+    cards.forEach((card, index) => {
+      const { marker, infoWindow, position } = markers[index];
+      const questId = card.dataset.id;
+      const questTitle = card.dataset.title;
 
-    cards.forEach((card) => {
-      card.addEventListener("click", function () {
-        const stepId = card.dataset.stepId;
-        const title = card.dataset.title;
+      // 🖱 마우스 오버
+      card.addEventListener("mouseover", () => {
+        map.setZoom(17);
+        map.panTo(position);
+        infoWindow.open(map, marker);
+      });
 
-        selectedStepId = stepId;
-        modalTitle.textContent = title;
+      // 🖱 마우스 아웃
+      card.addEventListener("mouseout", () => {
+        infoWindow.close();
+      });
+
+      // 🖱 클릭 → 모달 열기
+      card.addEventListener("click", () => {
+        selectedQuestId = questId;
+        modalText.textContent = `‘${questTitle}’ 퀘스트를 진행하시겠습니까?`;
         modal.style.display = "flex";
       });
     });
 
     confirmBtn.addEventListener("click", () => {
-      if (selectedStepId) {
-        window.location.href = `/quest/${selectedStepId}`;
+      if (selectedQuestId) {
+        window.location.href = `/api/quest/${selectedQuestId}`;
       }
     });
 
-    window.cancelModal = function () {
+    cancelBtn.addEventListener("click", () => {
       modal.style.display = "none";
-      selectedStepId = null;
-    };
+      selectedQuestId = null;
+    });
   });
 </script>
 
