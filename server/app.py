@@ -35,3 +35,27 @@ async def quest_course(request: Request, theme: str = "추천 코스"):
         "theme": theme,
         "steps": steps
     })
+    
+from fastapi import FastAPI, Request, UploadFile, File
+
+import shutil
+import os
+
+UPLOAD_DIR = "server/static/uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@app.post("/upload-photo")
+async def upload_photo(request: Request, photo: UploadFile = File(...)):
+    file_location = os.path.join(UPLOAD_DIR, photo.filename)
+    with open(file_location, "wb") as buffer:
+        shutil.copyfileobj(photo.file, buffer)
+
+    return templates.TemplateResponse("quest_detail.html", {
+        "request": request,
+        "quest": {
+            "title": "업로드된 퀘스트 예시",
+            "description": "사진이 업로드되었습니다!",
+            "photo_url": f"/static/uploads/{photo.filename}"
+        }
+    })
+
