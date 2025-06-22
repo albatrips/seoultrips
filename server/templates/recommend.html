@@ -1,12 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-    <h2>Your Quest Theme: {{ theme }}</h2>
-    <ul>
-        {% for step in steps %}
-            <li>
-                <strong>{{ step.name }}</strong>: {{ step.description }}
-                <button onclick="completeQuest({{ step.id }})">Complete</button>
-            </li>
-        {% endfor %}
-    </ul>
+<h2>'{{ theme }}' 테마에 맞는 퀘스트 추천</h2>
+<div class="recommendations">
+  {% for step in steps %}
+    <form action="/api/quest" method="get">
+      <input type="hidden" name="from_recommend" value="1">
+      <button type="submit" class="recommend-btn" onclick="localStorage.setItem('currentTheme', '{{ theme }}');">
+        {{ step.title }}
+      </button>
+    </form>
+  {% endfor %}
+</div>
+<form action="/api/custom" method="get">
+  <button type="submit" class="custom-btn">📝 직접 원하는 장소 입력하기</button>
+</form>
 {% endblock %}
