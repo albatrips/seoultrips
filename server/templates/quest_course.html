@@ -91,6 +91,11 @@
   .cancel-btn:hover {
     background: #bbb;
   }
+
+  .quest-card-ui.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 </style>
 
 <script>
@@ -103,6 +108,8 @@
     const steps = {{ steps | tojson | safe }};
     const markers = [];
     let selectedQuestId = null;
+
+    const completedQuests = JSON.parse(localStorage.getItem("completedQuests") || "[]");
 
     steps.forEach(function(step, index) {
       if (step.lat && step.lng) {
@@ -143,22 +150,24 @@
 
     cards.forEach((card, index) => {
       const { marker, infoWindow, position } = markers[index];
-      const questId = card.dataset.id;
+      const questId = parseInt(card.dataset.id);
       const questTitle = card.dataset.title;
 
-      // 🖱 마우스 오버
+      if (completedQuests.includes(questId)) {
+        card.classList.add("disabled");
+        return;
+      }
+
       card.addEventListener("mouseover", () => {
         map.setZoom(17);
         map.panTo(position);
         infoWindow.open(map, marker);
       });
 
-      // 🖱 마우스 아웃
       card.addEventListener("mouseout", () => {
         infoWindow.close();
       });
 
-      // 🖱 클릭 → 모달 열기
       card.addEventListener("click", () => {
         selectedQuestId = questId;
         modalText.textContent = `‘${questTitle}’ 퀘스트를 진행하시겠습니까?`;
@@ -168,7 +177,7 @@
 
     confirmBtn.addEventListener("click", () => {
       if (selectedQuestId) {
-        window.location.href = `/api/quest/${selectedQuestId}`;
+        window.location.href = `/quest/${selectedQuestId}`;
       }
     });
 

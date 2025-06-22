@@ -1,40 +1,48 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.middleware.cors import CORSMiddleware
-from server.api.recommend import router as recommend_router
+from server.api import recommend  # ✅ 올바른 경로로 수정
+import uvicorn
 
 app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], allow_credentials=True,
-    allow_methods=["*"], allow_headers=["*"],
-)
 
 app.mount("/static", StaticFiles(directory="server/static"), name="static")
 templates = Jinja2Templates(directory="server/templates")
 
-app.include_router(recommend_router, prefix="/api")
+app.include_router(recommend.router)  # prefix 제거
+
 
 @app.get("/")
-async def root(request: Request):
-    return templates.TemplateResponse("category.html", {"request": request})
+async def root():
+    return {
+        "message": "서버 실행 중입니다. → /quest 또는 /api/recommend 확인하세요."
+    }
+
+@app.on_event("startup")
+async def startup_event():
+    app.state.current_quests = [
+        {
+            "id": 1,
+            "title": "경복궁 방문",
+            "lat": 37.579617,
+            "lng": 126.977041,
+            "description": "경복궁을 방문하세요."
+        },
+        {
+            "id": 2,
+            "title": "북촌한옥마을 산책",
+            "lat": 37.582604,
+            "lng": 126.983998,
+            "description": "북촌한옥마을을 산책하세요."
+        },
+        {
+            "id": 3,
+            "title": "청계천 산책",
+            "lat": 37.570377,
+            "lng": 126.978104,
+            "description": "청계천을 걸어보세요."
+        }
+    ]
 
 if __name__ == "__main__":
-    import uvicorn
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-
-
-@app.get("/quest")
-async def legacy_quest_view(request: Request):
-    steps = [
-        {"id": 1, "title": "A 명소 방문", "lat": 37.579617, "lng": 126.977041},
-        {"id": 2, "title": "B 거리 걷기", "lat": 37.580146, "lng": 126.976892},
-        {"id": 3, "title": "C 카페 인증", "lat": 37.579617, "lng": 126.977041}
-    ]
-    return templates.TemplateResponse("quest_course.html", {
-        "request": request,
-        "theme": "기본 퀘스트",
-        "steps": steps
-    })
-

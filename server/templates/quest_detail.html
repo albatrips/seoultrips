@@ -1,14 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- 중앙 정렬 래퍼 -->
 <div class="quest-wrapper">
   <div class="quest-card">
     <h2>{{ quest.title }}</h2>
     <p>{{ quest.description }}</p>
 
-    <!-- 사진 업로드 폼 -->
-    <form id="photo-form" action="/api/upload-photo" method="post" enctype="multipart/form-data">
+    <form id="photo-form" action="/upload-photo" method="post" enctype="multipart/form-data">
+      <input type="hidden" name="quest_id" value="{{ quest.id }}">
       <label class="upload-btn">
         📷 사진 선택
         <input type="file" name="photo" id="photo-input" accept="image/*" hidden />
@@ -19,16 +18,14 @@
   </div>
 </div>
 
-<!-- ✅ 결과 모달 -->
 <div id="result-modal" class="modal" style="display: none;">
   <div class="modal-content">
     <h2 id="modal-title">퀘스트 결과</h2>
     <p id="modal-message">퀘스트 결과 메시지입니다.</p>
-    <button onclick="closeModal()">닫기</button>
+    <button id="confirm-btn">확인</button>
   </div>
 </div>
 
-<!-- ✅ 스타일 -->
 <style>
   .quest-wrapper {
     display: flex;
@@ -46,17 +43,6 @@
     text-align: center;
     max-width: 400px;
     width: 100%;
-  }
-
-  .quest-card h2 {
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .quest-card p {
-    font-size: 1.1rem;
-    margin-bottom: 1.5rem;
-    color: #555;
   }
 
   .upload-btn {
@@ -101,12 +87,13 @@
   }
 </style>
 
-<!-- ✅ 스크립트 -->
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const photoInput = document.getElementById("photo-input");
     const previewImage = document.getElementById("preview-image");
     const submitBtn = document.getElementById("submit-btn");
+    const result = {{ (result | default('') | tojson) }};
+    const questId = {{ quest.id }};
 
     photoInput.addEventListener("change", () => {
       const file = photoInput.files[0];
@@ -121,8 +108,6 @@
       }
     });
 
-    // 모달 결과 표시
-    const result = {{ (result | default('') | tojson) }};
     if (result === "success") {
       document.getElementById("modal-title").innerText = "🎉 퀘스트 성공!";
       document.getElementById("modal-message").innerText = "사진 인증에 성공했습니다!";
@@ -132,11 +117,25 @@
       document.getElementById("modal-message").innerText = "요구 조건을 만족하지 못했습니다.";
       document.getElementById("result-modal").style.display = "flex";
     }
-  });
 
-  function closeModal() {
-    document.getElementById("result-modal").style.display = "none";
-  }
+    document.getElementById("confirm-btn").addEventListener("click", () => {
+      if (result === "success") {
+        let completed = JSON.parse(localStorage.getItem("completedQuests") || "[]");
+        if (!completed.includes(questId)) {
+          completed.push(questId);
+          localStorage.setItem("completedQuests", JSON.stringify(completed));
+        }
+        window.location.href = "/quest";
+      } else {
+        document.getElementById("result-modal").style.display = "none";
+        // 사진 미리보기와 버튼 초기화
+        previewImage.style.display = "none";
+        previewImage.src = "";
+        submitBtn.style.display = "none";
+        photoInput.value = "";
+      }
+    });
+  });
 </script>
 
 {% endblock %}
