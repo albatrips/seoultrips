@@ -3,8 +3,11 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
+from dotenv import load_dotenv
 
-from server.api import recommend  # ✅ 올바른 경로로 import
+from server.api import location, visitor, related
+
+load_dotenv()
 
 app = FastAPI()
 
@@ -19,9 +22,9 @@ app.add_middleware(
 templates = Jinja2Templates(directory="server/templates")
 app.mount("/static", StaticFiles(directory="server/static"), name="static")
 
-app.include_router(recommend.router, prefix="/api")
-
-
+app.include_router(location.router, prefix="/api")
+app.include_router(visitor.router, prefix="/api")
+app.include_router(related.router, prefix="/api")
 
 @app.get("/")
 async def home(request: Request):
