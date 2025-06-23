@@ -107,6 +107,10 @@ async def upload_photo(
     with open(file_path, "wb") as f:
         shutil.copyfileobj(photo.file, f)
 
+    ## TODO : 삭제하기
+
+
+
     result = choice(["success", "fail"])
     quests = getattr(request.app.state, "current_quests", [])
     quest = next((q for q in quests if q["id"] == quest_id), {
