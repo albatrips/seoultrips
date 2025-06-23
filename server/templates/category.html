@@ -1,15 +1,206 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>여행 테마를 선택하세요</h2>
-<p>원하는 테마 하나를 선택하세요:</p>
-<form action="/api/recommend" method="post">
-  <div class="categories">
-    <button type="submit" name="theme" value="힐링">🌿 힐링</button>
-    <button type="submit" name="theme" value="레저">🚴 레저</button>
-    <button type="submit" name="theme" value="문화">🏯 문화</button>
-    <button type="submit" name="theme" value="자연">🌳 자연</button>
-    <button type="submit" name="theme" value="음식">🍜 음식</button>
-    <button type="submit" name="theme" value="쇼핑">🛍️ 쇼핑</button>
-  </div>
-</form>
-{% endblock %}
+<style>
+  body {
+    background: #eaf4fb;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+  }
+  .header-bar {
+    width: 100%;
+    height: 70px;
+    background: linear-gradient(90deg, #ff6b6b 0%, #ff8800 100%);
+    display: flex;
+    align-items: center;
+    padding-left: 32px;
+    font-size: 1.7rem;
+    font-weight: bold;
+    color: #fff;
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    letter-spacing: -1px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    margin-bottom: 32px;
+  }
+  .category-main-container {
+    max-width: 900px;
+    margin: 40px auto 0 auto;
+    background: #eaf4fb;
+    border-radius: 18px;
+    box-shadow: none;
+    padding: 40px 32px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 36px 8px;
+    justify-items: center;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .categories {
+    background: transparent;
+    border-radius: 50%;
+    box-shadow: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.18s, transform 0.18s;
+    cursor: pointer;
+    width: 120px;
+    max-width: 140px;
+  }
+  .categories img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    background-color: #fff;
+    border-radius: 50%;
+    margin-bottom: 12px;
+    border: 3px solid #fff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    transition: transform 0.22s cubic-bezier(0.4, 1.5, 0.5, 1), box-shadow 0.22s;
+  }
+  .categories:hover img {
+    transform: scale(1.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  }
+  .categories span {
+    display: block;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    color: #222;
+    margin-top: 4px;
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    letter-spacing: -0.5px;
+    text-shadow: 0 1px 0 #fff, 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  .category-title {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    color: #222;
+    letter-spacing: -1px;
+  }
+  .category-desc {
+    text-align: center;
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 32px;
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  button[type="submit"] {
+    margin-top: 30px;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 8px;
+    background-color: #ff8800;
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
+    transition: background 0.18s;
+  }
+  button[type="submit"]:hover {
+    background-color: #ff6b00;
+  }
+  .category-title-bookmark {
+    display: inline-block;
+    position: relative;
+    background: #fff;
+    border-radius: 12px 12px 18px 18px;
+    padding: 18px 36px 16px 36px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #222;
+    font-family: "Noto Sans KR", "Apple SD Gothic Neo", sans-serif;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+    margin-bottom: 8px;
+    margin-top: 0;
+    letter-spacing: -1px;
+  }
+  .category-title-bookmark::before,
+  .category-title-bookmark::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    width: 0;
+    height: 0;
+    border-top: 18px solid #4fc3f7;
+    border-left: 18px solid transparent;
+  }
+  .category-title-bookmark::before {
+    left: 0;
+    border-radius: 12px 0 0 0;
+  }
+  .category-title-bookmark::after {
+    right: 0;
+    border-radius: 0 12px 0 0;
+    transform: scaleX(-1);
+  }
+</style>
+
+<div class="header-bar">Voice Quest</div>
+<div class="category-main-container">
+  <h2 class="category-title-bookmark">어떤 것에 관심이 있으세요?</h2>
+  <p class="category-desc">홈피드를 사용자 지정할 수 있도록 5개를 골라주세요</p>
+  <form action="/api/recommend" method="post">
+    <div class="grid">
+      <label class="categories">
+        <input type="checkbox" name="theme" value="힐링" hidden />
+        <img src="/server/static/uploads/bogum.png" alt="배경화면" />
+        <span>🌳 신책</span>
+      </label>
+
+      <label class="categories">
+        <input type="checkbox" name="theme" value="일본 애니메이션" hidden />
+        <img src="/server/static/uploads/bogum.png" alt="일본 애니메이션" />
+        <span>🏕 캠핑</span>
+      </label>
+
+      <label class="categories">
+        <input type="checkbox" name="theme" value="예술" hidden />
+        <img src="/server/static/uploads/bogum.png" alt="예술" />
+        <span>🎢 액티비티</span>
+      </label>
+
+      <!-- 추가 항목 -->
+      <label class="categories">
+        <input type="checkbox" name="theme" value="사진" hidden />
+        <img src="/server/static/uploads/bogum.png" alt="사진" />
+        <span>🏛 역사</span>
+      </label>
+
+      <label class="categories">
+        <input type="checkbox" name="theme" value="그래픽 디자인" hidden />
+        <img src="/server/static/uploads/bogum.png" alt="그래픽 디자인" />
+        <span>🎨 예술</span>
+      </label>
+
+      <label class="categories">
+        <input type="checkbox" name="theme" value="동물" hidden />
+        <img src="/server/static/uploads/bogum.png" alt="동물" />
+        <span>🐶 cute </span>
+      </label>
+
+      <!-- 필요시 더 추가 가능 -->
+    </div>
+    <button type="submit">선택 완료</button>
+  </form>
+</div>
