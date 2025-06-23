@@ -2,13 +2,14 @@ from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
-from server.api.recommend import router as recommend_router
+from server.api.location import router as location_router
+from server.api.quest import router as quest_router
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8000"],
+    allow_origins=["http://localhost:8000", "http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -17,7 +18,8 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="server/static"), name="static")
 templates = Jinja2Templates(directory="server/templates")
 
-app.include_router(recommend_router, prefix="/api")
+app.include_router(location_router, prefix="/api")
+app.include_router(quest_router, prefix="/api")
 
 @app.get("/")
 async def show_categories(request: Request):
