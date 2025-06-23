@@ -6,7 +6,7 @@
     <h2>{{ quest.title }}</h2>
     <p>{{ quest.description }}</p>
 
-    <form id="photo-form" action="/upload-photo" method="post" enctype="multipart/form-data">
+    <form id="photo-form" action="/api/upload-photo" method="post" enctype="multipart/form-data">
       <input type="hidden" name="quest_id" value="{{ quest.id }}">
       <label class="upload-btn">
         📷 사진 선택
@@ -92,8 +92,10 @@
     const photoInput = document.getElementById("photo-input");
     const previewImage = document.getElementById("preview-image");
     const submitBtn = document.getElementById("submit-btn");
-    const result = {{ (result | default('') | tojson) }};
+    const result = "{{ result | default('') }}";  // 문자열 그대로 받기
     const questId = {{ quest.id }};
+
+    console.log("업로드 결과:", result);  // 디버깅용
 
     photoInput.addEventListener("change", () => {
       const file = photoInput.files[0];
@@ -125,10 +127,9 @@
           completed.push(questId);
           localStorage.setItem("completedQuests", JSON.stringify(completed));
         }
-        window.location.href = "/quest";
+        window.location.href = "/api/quest";
       } else {
         document.getElementById("result-modal").style.display = "none";
-        // 사진 미리보기와 버튼 초기화
         previewImage.style.display = "none";
         previewImage.src = "";
         submitBtn.style.display = "none";
