@@ -4,8 +4,10 @@ from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from server.api.location import router as location_router
 from server.api.quest import router as quest_router
+from server.api.recommend import router as recommend_router
 
 app = FastAPI()
+app.include_router(recommend_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -20,6 +22,7 @@ templates = Jinja2Templates(directory="server/templates")
 
 app.include_router(location_router, prefix="/api")
 app.include_router(quest_router, prefix="/api")
+app.include_router(recommend_router, prefix="/app")
 
 @app.get("/")
 async def show_categories(request: Request):
