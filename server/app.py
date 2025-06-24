@@ -1,9 +1,13 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
 from server.api.location import router as location_router
 from server.api.quest import router as quest_router
+from server.api.recommend import router as recommend_router
+from server.services.client import get_user, save_user
+import pandas as pd
 
 app = FastAPI()
 
@@ -18,10 +22,32 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="server/static"), name="static")
 templates = Jinja2Templates(directory="server/templates")
 
-app.include_router(location_router, prefix="/api")
-app.include_router(quest_router, prefix="/api")
+app.include_router(location_router)
+app.include_router(quest_router)
+app.include_router(recommend_router)
 
 @app.get("/")
+async def read_root(request: Request):
+    user_data = get_user()
+    try:
+        df = pd.read_csv('seoul_sigungu_codes.csv')
+        print('df', df)
+        sigungu_list = df['name'].tolist()
+    except FileNotFoundError:
+        sigungu_list = []
+    return templates.TemplateResponse("initial.html", {"request": request, "user": user_data, "sigungu_list": sigungu_list})
+
+@app.post("/create-user")
+async def handle_create_user(
+    age: int = Form(...),
+    gender: str = Form(...),
+    location: str = Form(...),
+    travel_time: int = Form(...)
+):
+    save_user(age, gender, location, travel_time)
+    return RedirectResponse(url="/category", status_code=303)
+
+@app.get("/category")
 async def show_categories(request: Request):
     return templates.TemplateResponse("category.html", {"request": request})
 
@@ -61,3 +87,7 @@ async def upload_photo(request: Request, photo: UploadFile = File(...)):
         }
     })
 
+# server/app.py 맨 아래에 잠깐 추가
+if __name__ == "__main__":
+    for r in app.routes:
+        print(f"{r.path} -> {r.methods}")
