@@ -150,8 +150,9 @@ def get_set_by_id(set_id: int):
 
     try:
         cursor = conn.cursor(dictionary=True)
-        # Simplified query to fetch essential data and prevent errors from missing columns.
-        query = "SELECT course_id, mission, place_name, description, sigungu, lat, lng FROM set_table WHERE set_id = %s ORDER BY course_id"
+        # Re-expanding the query to include all possible fields to match the database schema.
+        # This will ensure data is fetched correctly.
+        query = "SELECT course_id, mission, place_name, description, photomission, take_time, sigungu, lat, lng FROM set_table WHERE set_id = %s ORDER BY course_id"
         cursor.execute(query, (set_id,))
         return cursor.fetchall()
     except mysql.connector.Error as err:
