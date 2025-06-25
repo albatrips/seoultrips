@@ -45,6 +45,19 @@
             border-color: #98c1d9;
         }
 
+        .route-card-link {
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            border-radius: 12px; /* Match card rounding */
+            transition: all 0.3s ease;
+        }
+        
+        .route-card-link:hover .route-card {
+            border-color: #98c1d9;
+            box-shadow: 0 0 15px rgba(152, 193, 217, 0.5);
+        }
+
         .route-list-container {
             max-width: 900px;
             margin: 0 auto;
@@ -62,6 +75,7 @@
             border-radius: 10px;
             margin-bottom: 25px;
             padding: 20px;
+            transition: all 0.3s ease;
         }
 
         .route-title {
@@ -156,18 +170,20 @@
     <div class="route-list-container">
         {% if routes %}
             {% for route in routes %}
-            <div class="route-card">
-                <h2 class="route-title">{{ route.route_title }}</h2>
-                <div class="course-container">
-                    {% for course in route.courses %}
-                    <div class="course-item">
-                        <div class="course-circle" onclick="openModal('{{ route.route_title }}', '{{ course.place_name }}')">
-                            {{ course.place_name }}
+            <a href="/api/custom?set_id={{ route.set_id }}" class="route-card-link">
+                <div class="route-card">
+                    <h2 class="route-title">{{ route.route_title }}</h2>
+                    <div class="course-container">
+                        {% for course in route.courses %}
+                        <div class="course-item">
+                            <div class="course-circle" data-routetitle="{{ route.route_title }}" data-placename="{{ course.place_name }}">
+                                {{ course.place_name }}
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                    {% endfor %}
                 </div>
-            </div>
+            </a>
             {% endfor %}
         {% else %}
             <p style="text-align: center; font-size: 1.2rem;">추천할만한 루트를 찾지 못했어요. 다른 테마를 선택해보세요!</p>
@@ -188,6 +204,16 @@
         const modal = document.getElementById('questModal');
         const modalTitle = document.getElementById('modalTitle');
         const modalPlace = document.getElementById('modalPlace');
+
+        document.querySelectorAll('.course-circle').forEach(circle => {
+            circle.addEventListener('click', function(event) {
+                event.preventDefault(); // Stop the link from navigating
+                event.stopPropagation(); // Stop the event from bubbling up to the link
+                const routeTitle = this.dataset.routetitle;
+                const placeName = this.dataset.placename;
+                openModal(routeTitle, placeName);
+            });
+        });
 
         function openModal(routeTitle, placeName) {
             modalTitle.textContent = routeTitle;

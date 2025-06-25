@@ -122,6 +122,7 @@ def get_routes_by_categories(categories: list):
             if title not in routes:
                 routes[title] = {
                     'route_title': title,
+                    'set_id': row['set_id'],
                     'courses': []
                 }
             routes[title]['courses'].append({
@@ -133,6 +134,74 @@ def get_routes_by_categories(categories: list):
 
     except mysql.connector.Error as err:
         print(f"Error fetching routes: {err}")
+        return []
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+def get_set_by_id(set_id: int):
+    if not set_id:
+        return []
+    
+    conn = get_db_connection()
+    if conn is None:
+        return []
+
+    try:
+        cursor = conn.cursor(dictionary=True)
+        # Simplified query to fetch essential data and prevent errors from missing columns.
+        query = "SELECT course_id, mission, place_name, description, sigungu, lat, lng FROM set_table WHERE set_id = %s ORDER BY course_id"
+        cursor.execute(query, (set_id,))
+        return cursor.fetchall()
+    except mysql.connector.Error as err:
+        print(f"Error fetching set details: {err}")
+        return []
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+def create_quests(quests_data: list):
+    if not quests_data:
+        return
+    conn = get_db_connection()
+    if conn is None:
+        return
+
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM quests")
+        
+        query = """
+            INSERT INTO quests (quest_id, mission, place_name, description, is_cleared, address, lat, lng)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = [
+            (q.get('course_id'), q.get('mission'), q.get('place_name'), q.get('description'), 0, q.get('address'), q.get('lat'), q.get('lng'))
+            for q in quests_data
+        ]
+        cursor.executemany(query, values)
+        conn.commit()
+    except mysql.connector.Error as err:
+        print(f"Error creating quests: {err}")
+        conn.rollback()
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+def get_all_quests():
+    conn = get_db_connection()
+    if conn is None:
+        return []
+    try:
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT quest_id as id, place_name as title, description, lat, lng FROM quests ORDER BY quest_id"
+        cursor.execute(query)
+        return cursor.fetchall()
+    except mysql.connector.Error as err:
+        print(f"Error fetching all quests: {err}")
         return []
     finally:
         if conn.is_connected():

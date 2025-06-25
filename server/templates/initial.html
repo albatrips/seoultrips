@@ -42,7 +42,7 @@
             border-right: 3px solid #1f4068;
         }
 
-        .status-box, .action-box {
+        .status-box, .action-box, .edit-form {
             background-color: #1b263b;
             padding: 20px;
             border-radius: 10px;
@@ -147,12 +147,43 @@
     <div class="container">
         {% if user %}
         <div class="left-panel">
-            <div class="status-box">
+            <div class="status-box" id="userInfo">
                 <h2>플레이어 정보</h2>
                 <div class="status-item"><span>나이:</span> {{ user.age }}</div>
                 <div class="status-item"><span>성별:</span> {{ user.gender }}</div>
                 <div class="status-item"><span>여행 지역:</span> {{ user.location }}</div>
                 <div class="status-item"><span>코스 시간:</span> {{ user.travel_time }} 시간</div>
+                <button class="action-button" id="editButton" style="margin-top: 20px;">수정</button>
+            </div>
+            <div class="edit-form" id="editForm" style="display: none;">
+                <form action="/create-user" method="post">
+                    <div class="input-group">
+                        <label for="age">나이:</label>
+                        <input type="number" id="age" name="age" value="{{ user.age }}" required>
+                    </div>
+                    <div class="input-group">
+                        <label>성별:</label>
+                        <div class="radio-group">
+                            <input type="radio" id="male_edit" name="gender" value="남성" {% if user.gender == '남성' %}checked{% endif %} required>
+                            <label for="male_edit">남성</label>
+                            <input type="radio" id="female_edit" name="gender" value="여성" {% if user.gender == '여성' %}checked{% endif %}>
+                            <label for="female_edit">여성</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">여행 지역:</label>
+                        <select id="location" name="location" required>
+                            {% for sigungu in sigungu_list %}
+                            <option value="{{ sigungu }}" {% if sigungu == user.location %}selected{% endif %}>{{ sigungu }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="travel_time">코스 시간 (시간):</label>
+                        <input type="number" id="travel_time" name="travel_time" value="{{ user.travel_time }}" required>
+                    </div>
+                    <button type="submit" class="action-button">수정 완료</button>
+                </form>
             </div>
         </div>
         <div class="right-panel">
@@ -199,5 +230,14 @@
         </div>
         {% endif %}
     </div>
+
+    {% if user %}
+    <script>
+        document.getElementById('editButton').addEventListener('click', () => {
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('editForm').style.display = 'block';
+        });
+    </script>
+    {% endif %}
 </body>
 </html> 

@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse, HTMLResponse
 import os, shutil
 from random import choice
-from server.services.client import get_routes_by_categories
+from server.services.client import get_routes_by_categories, get_set_by_id, create_quests, get_all_quests
 import json
 
 router = APIRouter()
@@ -26,36 +26,37 @@ async def recommend_routes(request: Request, categories: str = Form(...)):
         "routes": recommended_routes
     })
 
+@router.post("/start-quest")
+async def start_quest(request: Request):
+    form_data = await request.form()
+    quests_to_create = []
+    
+    # This logic rebuilds the list of quests from the submitted form data.
+    # It groups data by index (0, 1, 2) from the form fields.
+    i = 0
+    while f"course_id_{i}" in form_data:
+        # Only add the quest if a mission title was provided
+        if form_data.get(f"mission_{i}"):
+            quests_to_create.append({
+                "course_id": form_data[f"course_id_{i}"],
+                "mission": form_data[f"mission_{i}"],
+                "place_name": form_data[f"place_name_{i}"],
+                "description": form_data[f"description_{i}"],
+                "address": form_data[f"address_{i}"],
+                "lat": form_data[f"lat_{i}"],
+                "lng": form_data[f"lng_{i}"],
+            })
+        i += 1
+        
+    if quests_to_create:
+        create_quests(quests_to_create)
+    
+    return RedirectResponse(url="/api/quest", status_code=303)
+
 # ✅ 퀘스트 목록 페이지
 @router.get("/quest")
 async def quest_course(request: Request):
-    steps = getattr(request.app.state, "current_quests", [])
-    if not steps:
-        steps = [
-            {
-                "id": 1,
-                "title": "경복궁 방문",
-                "lat": 37.579617,
-                "lng": 126.977041,
-                "description": "경복궁을 방문하세요."
-            },
-            {
-                "id": 2,
-                "title": "북촌한옥마을 산책",
-                "lat": 37.582604,
-                "lng": 126.983998,
-                "description": "북촌한옥마을을 산책하세요."
-            },
-            {
-                "id": 3,
-                "title": "청계천 산책",
-                "lat": 37.570377,
-                "lng": 126.978104,
-                "description": "청계천을 걸어보세요."
-            }
-        ]
-        request.app.state.current_quests = steps
-
+    steps = get_all_quests()
     return templates.TemplateResponse("quest_course.html", {
         "request": request,
         "theme": "기본",
@@ -113,9 +114,16 @@ async def upload_photo(
     })
 
 # ✅ 사용자 정의 퀘스트 입력 페이지
-@router.get("/custom")
-async def custom_input(request: Request):
-    return templates.TemplateResponse("custom.html", {"request": request})
+@router.get("/custom", response_class=HTMLResponse)
+async def custom_input_page(request: Request, set_id: int = None):
+    set_details = []
+    if set_id:
+        set_details = get_set_by_id(set_id)
+    
+    return templates.TemplateResponse("custom.html", {
+        "request": request,
+        "set_details": set_details
+    })
 
 # ✅ 사용자 정의 퀘스트 제출
 @router.post("/custom-submit")
