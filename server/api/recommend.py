@@ -1,45 +1,29 @@
 from fastapi import APIRouter, Request, Form, UploadFile, File
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 import os, shutil
 from random import choice
+from server.services.client import get_routes_by_categories
+import json
 
-router = APIRouter(prefix="/api")
+router = APIRouter()
 templates = Jinja2Templates(directory="server/templates")
 UPLOAD_DIR = "server/static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ✅ 추천 퀘스트
-@router.post("/recommend")
-async def recommend(request: Request, theme: str = Form(...)):
-    steps = [
-        {
-            "id": 1,
-            "title": "경복궁 방문",
-            "lat": 37.579617,
-            "lng": 126.977041,
-            "description": f"{theme} 테마로 경복궁을 방문하세요."
-        },
-        {
-            "id": 2,
-            "title": "북촌한옥마을 산책",
-            "lat": 37.582604,
-            "lng": 126.983998,
-            "description": f"{theme} 테마로 북촌한옥마을을 산책하세요."
-        },
-        {
-            "id": 3,
-            "title": "청계천 산책",
-            "lat": 37.570377,
-            "lng": 126.978104,
-            "description": f"{theme} 테마로 청계천을 걸어보세요."
-        }
-    ]
-    request.app.state.current_quests = steps
+@router.post("/recommend", response_class=HTMLResponse)
+async def recommend_routes(request: Request, categories: str = Form(...)):
+    try:
+        selected_categories = json.loads(categories)
+    except json.JSONDecodeError:
+        selected_categories = []
+    
+    recommended_routes = get_routes_by_categories(selected_categories)
+    
     return templates.TemplateResponse("recommend.html", {
         "request": request,
-        "theme": theme,
-        "steps": steps
+        "routes": recommended_routes
     })
 
 # ✅ 퀘스트 목록 페이지

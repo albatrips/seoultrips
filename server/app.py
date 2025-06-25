@@ -10,6 +10,7 @@ from server.services.client import get_user, save_user
 import pandas as pd
 
 app = FastAPI()
+app.include_router(recommend_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,9 +23,9 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="server/static"), name="static")
 templates = Jinja2Templates(directory="server/templates")
 
-app.include_router(location_router)
-app.include_router(quest_router)
-app.include_router(recommend_router)
+app.include_router(location_router, prefix="/api")
+app.include_router(quest_router, prefix="/api")
+app.include_router(recommend_router, prefix="/api")
 
 @app.get("/")
 async def read_root(request: Request):

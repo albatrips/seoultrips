@@ -8,7 +8,10 @@ header {
   padding: 10px;
 }
 .categories {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: cneter;
+  margin-top: 20px;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
@@ -20,6 +23,7 @@ header {
   border-radius: 8px;
   background-color: #f4f4f4;
 }
+
 .category:hover {
   background-color: #d9ecff;
 }

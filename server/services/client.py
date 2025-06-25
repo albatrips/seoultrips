@@ -76,4 +76,65 @@ def save_user(age, gender, location, travel_time):
     finally:
         if conn.is_connected():
             cursor.close()
+            conn.close()
+
+def get_routes_by_categories(categories: list):
+    if not categories:
+        return []
+
+    conn = get_db_connection()
+    if conn is None:
+        return []
+
+    try:
+        cursor = conn.cursor(dictionary=True)
+        
+        # Create a query with a WHERE clause that checks if the route's category is in the provided list.
+        # This uses FIND_IN_SET for comma-separated category strings, or a simple IN clause.
+        # We'll build the placeholders dynamically to avoid SQL injection.
+        placeholders = ','.join(['%s'] * len(categories))
+        
+        # This query joins the two tables and filters routes by the selected categories.
+        # It orders the results to ensure course steps are sequential.
+        query = f"""
+            SELECT 
+                r.route_title,
+                r.set_id,
+                s.course_id,
+                s.place_name
+            FROM 
+                route_table r
+            JOIN 
+                set_table s ON r.set_id = s.set_id
+            WHERE 
+                r.category IN ({placeholders})
+            ORDER BY 
+                r.set_id, s.course_id;
+        """
+
+        cursor.execute(query, tuple(categories))
+        results = cursor.fetchall()
+        
+        # Group the flat SQL results into a nested structure by route_title.
+        routes = {}
+        for row in results:
+            title = row['route_title']
+            if title not in routes:
+                routes[title] = {
+                    'route_title': title,
+                    'courses': []
+                }
+            routes[title]['courses'].append({
+                'course_id': row['course_id'],
+                'place_name': row['place_name']
+            })
+        
+        return list(routes.values())
+
+    except mysql.connector.Error as err:
+        print(f"Error fetching routes: {err}")
+        return []
+    finally:
+        if conn.is_connected():
+            cursor.close()
             conn.close() 
