@@ -4,7 +4,7 @@ from fastapi.responses import RedirectResponse
 import os, shutil
 from random import choice
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 templates = Jinja2Templates(directory="server/templates")
 UPLOAD_DIR = "server/static/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
