@@ -550,11 +550,14 @@
     const modalContent = document.querySelector(".modal-content");
     
     // Handle verification data safely
-    let verification = {};
-    try {
-      verification = {{ verification | tojson | safe if verification else '{}' }};
-    } catch (e) {
-      console.log("Verification data parsing failed:", e);
+    let verification = null;
+    const verificationData = '{{ verification | tojson | safe if verification else "" }}';
+    if (verificationData) {
+      try {
+        verification = JSON.parse(verificationData);
+      } catch (e) {
+        console.log("Failed to parse verification data:", e);
+      }
     }
 
     console.log("업로드 결과:", result);

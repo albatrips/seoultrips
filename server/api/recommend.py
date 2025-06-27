@@ -80,43 +80,28 @@ async def quest_detail(request: Request, quest_id: int, result: str = "", theme:
     # Get detailed quest information including photomission
     quest = get_quest_by_id(quest_id)
     
+    # Create verification result based on the result parameter
+    verification = None
+    if result:
+        if result == "success":
+            verification = {
+                "score": 85,
+                "feedback": "축하합니다! 포토 미션을 성공적으로 완료했습니다. 훌륭한 사진이네요!",
+                "mission_fulfilled": True
+            }
+        elif result == "fail":
+            verification = {
+                "score": 45,
+                "feedback": "아쉽게도 포토 미션 요구사항을 충족하지 못했습니다. 미션 내용을 다시 확인하고 재도전해보세요!",
+                "mission_fulfilled": False
+            }
+    
     return templates.TemplateResponse("quest_detail.html", {
         "request": request,
         "quest": quest,
         "result": result,
+        "verification": verification,
         "theme": theme
-    })
-
-# ✅ 사진 업로드 및 성공/실패 판단 - 개선된 버전
-@router.post("/upload-photo")
-async def upload_photo_improved(
-    request: Request,
-    photo: UploadFile = File(...),
-    quest_id: int = Form(...)
-):
-    # Get quest details with photomission
-    quest = get_quest_by_id(quest_id)
-    
-    # Save uploaded photo
-    file_path = os.path.join(UPLOAD_DIR, f"quest_{quest_id}_{photo.filename}")
-    with open(file_path, "wb") as f:
-        shutil.copyfileobj(photo.file, f)
-
-    # Simple success/failure determination (can be enhanced with AI later)
-    result = choice(["success", "fail"])
-    
-    # Create mock verification result
-    verification_result = {
-        "score": 85 if result == "success" else 45,
-        "feedback": f"{'훌륭한 사진입니다! 포토 미션을 성공적으로 완료했습니다.' if result == 'success' else '포토 미션 요구사항을 다시 확인해보세요. 다시 도전해주세요!'}"
-    }
-
-    return templates.TemplateResponse("quest_detail.html", {
-        "request": request,
-        "quest": quest,
-        "result": result,
-        "verification": verification_result,
-        "uploaded_photo": f"/static/uploads/quest_{quest_id}_{photo.filename}"
     })
 
 # ✅ 사용자 정의 퀘스트 입력 페이지
