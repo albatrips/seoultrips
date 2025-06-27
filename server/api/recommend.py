@@ -56,7 +56,18 @@ async def start_quest(request: Request):
 # ✅ 퀘스트 목록 페이지
 @router.get("/quest")
 async def quest_course(request: Request):
-    steps = get_all_quests()
+    steps_data = get_all_quests()
+    
+    # Convert Decimal to float for JSON serialization in templates
+    steps = []
+    for step in steps_data:
+        step_dict = dict(step)
+        if 'lat' in step_dict and step_dict['lat'] is not None:
+            step_dict['lat'] = float(step_dict['lat'])
+        if 'lng' in step_dict and step_dict['lng'] is not None:
+            step_dict['lng'] = float(step_dict['lng'])
+        steps.append(step_dict)
+
     return templates.TemplateResponse("quest_course.html", {
         "request": request,
         "theme": "기본",

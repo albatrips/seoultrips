@@ -35,7 +35,7 @@ async def generate_quest(request: Request):
         question=question,
         category= "" if user.get("category") is None else user.get("category"),
     )
-
+    print("DEBUG initial_state:", initial_state)
     graph = create_main_graph()
     final_state = await graph.ainvoke(initial_state)
     print("DEBUG final_state:", final_state.get("result"))

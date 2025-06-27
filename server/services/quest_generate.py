@@ -9,6 +9,11 @@ from server.services.korea_tour_api import get_location_based_list
 from server.api.location import get_sigungu_code
 from langchain_core.messages import SystemMessage, HumanMessage
 import pandas as pd
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 class QuestState(TypedDict):
     # 가장 처음에 입력 받을 항목
@@ -40,10 +45,10 @@ def init_state(state):
 
     try:
         data = get_location_based_list(area_code=1, sigungu_code=sigungu_code)
-
+        # print('\n\n\n\ndata', data, '\n\n\n\n')
         BASE = Path(__file__).resolve().parents[2]
         csv_path = BASE / 'place_name.csv'
-        print(csv_path)
+        # print('\n\n\n\ncsv_path', csv_path, '\n\n\n\n')
         excel_data = pd.read_csv(csv_path, encoding='utf-8')
 
         return {"api_data": data, "excel_data": excel_data}
@@ -121,7 +126,7 @@ async def quest_generate(state: QuestState):
     #     model="gemini-1.5-flash",
     # )
     llm = ChatOpenAI(
-        model="gpt-4o-mini", api_key="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"
+        model="gpt-4o-mini"
     )
 
     messages = [

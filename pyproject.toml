@@ -17,4 +17,5 @@ dependencies = [
     "uvicorn[standard]>=0.34.3",
     "pandas>=2.3.0",
     "langchain-openai>=0.3.26",
+    "python-dotenv>=1.1.0",
 ]

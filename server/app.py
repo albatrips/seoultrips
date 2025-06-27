@@ -3,13 +3,18 @@ from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
 from server.api.location import router as location_router
 from server.api.quest import router as quest_router
 from server.api.recommend import router as recommend_router
 from server.services.client import get_user, save_user
+from server.utils import CustomJSONEncoder
 import pandas as pd
 
 app = FastAPI()
+
+jsonable_encoder.default = CustomJSONEncoder().default
+
 app.include_router(recommend_router, prefix="/api")
 
 app.add_middleware(
