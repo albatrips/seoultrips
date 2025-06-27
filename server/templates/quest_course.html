@@ -106,15 +106,18 @@
       center: new naver.maps.LatLng(37.579617, 126.977041),
       zoom: 14
     });
-    console.log('여기다인마', steps)
+
     const steps = {{ steps | tojson | safe }};
+    console.log("Steps data:", steps); // Debug log
     const markers = [];
     let selectedQuestId = null;
 
     const completedQuests = JSON.parse(localStorage.getItem("completedQuests") || "[]");
 
+    // Create markers for each step that has valid coordinates
     steps.forEach(function(step, index) {
-      if (step.lat && step.lng) {
+      console.log(`Step ${index}:`, step); // Debug log
+      if (step.lat && step.lng && step.lat !== 0 && step.lng !== 0) {
         const position = new naver.maps.LatLng(step.lat, step.lng);
 
         const marker = new naver.maps.Marker({
@@ -140,7 +143,11 @@
           disableAnchor: true
         });
 
-        markers.push({ marker, infoWindow, position });
+        // Store marker with step index for proper mapping
+        markers[index] = { marker, infoWindow, position };
+      } else {
+        // Store null for steps without valid coordinates
+        markers[index] = null;
       }
     });
 
@@ -151,7 +158,6 @@
     const modalText = document.getElementById("modal-text");
 
     cards.forEach((card, index) => {
-      const { marker, infoWindow, position } = markers[index];
       const questId = parseInt(card.dataset.id);
       const questTitle = card.dataset.title;
 
@@ -160,26 +166,31 @@
         return;
       }
 
-      card.addEventListener("mouseover", () => {
-        map.setZoom(17);
-        map.panTo(position);
-        infoWindow.open(map, marker);
-      });
+      // Only add map interactions if marker exists for this index
+      if (markers[index]) {
+        const { marker, infoWindow, position } = markers[index];
 
-      card.addEventListener("mouseout", () => {
-        infoWindow.close();
-      });
+        card.addEventListener("mouseover", () => {
+          map.setZoom(17);
+          map.panTo(position);
+          infoWindow.open(map, marker);
+        });
+
+        card.addEventListener("mouseout", () => {
+          infoWindow.close();
+        });
+      }
 
       card.addEventListener("click", () => {
         selectedQuestId = questId;
-        modalText.textContent = `‘${questTitle}’ 퀘스트를 진행하시겠습니까?`;
+        modalText.textContent = `'${questTitle}' 퀘스트를 진행하시겠습니까?`;
         modal.style.display = "flex";
       });
     });
 
     confirmBtn.addEventListener("click", () => {
       if (selectedQuestId) {
-        window.location.href = `quest/${selectedQuestId}`;
+        window.location.href = `/api/quest/${selectedQuestId}`;
       }
     });
 

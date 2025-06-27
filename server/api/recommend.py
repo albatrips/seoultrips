@@ -77,14 +77,21 @@ async def quest_course(request: Request):
 # ✅ 퀘스트 상세 페이지
 @router.get("/quest/{quest_id}")
 async def quest_detail(request: Request, quest_id: int, result: str = "", theme: str = "기본"):
-    quests = getattr(request.app.state, "current_quests", [])
-    quest = next((q for q in quests if q["id"] == quest_id), {
-        "id": quest_id,
-        "title": "예시 퀘스트",
-        "lat": 0.0,
-        "lng": 0.0,
-        "description": "예시 퀘스트입니다."
-    })
+    from server.services.client import get_all_quests
+    
+    # Get all quests and find the specific quest
+    all_quests = get_all_quests()
+    quest = next((q for q in all_quests if q["id"] == quest_id), None)
+    
+    if quest is None:
+        quest = {
+            "id": quest_id,
+            "title": "예시 퀘스트",
+            "lat": 37.579617,
+            "lng": 126.977041,
+            "description": "예시 퀘스트입니다."
+        }
+    
     return templates.TemplateResponse("quest_detail.html", {
         "request": request,
         "quest": quest,
