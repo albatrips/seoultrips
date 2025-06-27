@@ -306,17 +306,35 @@
                 </form>
             </div>
             <form id="questForm" action="/api/start-quest" method="post">
-                <!-- 결과 표시 섹션 -->
-                <div class="result-section" id="resultSection">
+                <div class="result-section" id="resultSection" style="display: {% if set_details %}block{% else %}none{% endif %};">
                     <h3 class="result-title">생성된 퀘스트</h3>
                     <div class="result-content" id="resultContent">
+                        <!-- 전달된 데이터: {{ set_details }} -->
+                        {% if set_details %}
+                            {% for detail in set_details %}
+                            <div style="margin-bottom: 20px; padding: 15px; background-color: #1b263b; border-radius: 8px; border: 1px solid #415a77;">
+                                <h4 style="color: #98c1d9; margin: 0 0 10px 0;">
+                                    퀘스트 {{ loop.index }}: <input type="text" name="mission_{{ loop.index0 }}" value="{{ detail.place_name }}" class="mission-title-input" style="background: transparent; border: none; color: #e0fbfc;">
+                                </h4>
+                                <p style="margin: 5px 0;"><span style="color: #98c1d9;">장소:</span> {{ detail.place_name }}</p>
+                                <p style="margin: 5px 0;"><span style="color: #98c1d9;">설명:</span> 
+                                    <textarea name="description_{{ loop.index0 }}" style="width: 95%; background: #162447; border: 1px solid #415a77; color: #e0e0e0; padding: 8px; margin-top: 4px; font-family: 'DotGothic16', sans-serif; font-size: 0.9rem; border-radius: 3px; height: 60px; resize: vertical;">{{ detail.description }}</textarea>
+                                </p>
+                                <input type="hidden" name="course_id_{{ loop.index0 }}" value="{{ detail.course_id }}">
+                                <input type="hidden" name="place_name_{{ loop.index0 }}" value="{{ detail.place_name }}">
+                                <input type="hidden" name="address_{{ loop.index0 }}" value="{{ detail.address }}">
+                                <input type="hidden" name="lat_{{ loop.index0 }}" value="{{ detail.lat }}">
+                                <input type="hidden" name="lng_{{ loop.index0 }}" value="{{ detail.lng }}">
+                            </div>
+                            {% endfor %}
+                        {% else %}
                         <!-- 결과가 여기에 표시됩니다 -->
+                        {% endif %}
                     </div>
                 </div>
                 <button type="submit" id="submitButton" class="start-quest-button">퀘스트 시작하기</button>
             </form>
         </div>
-
     </div>
 
     <!-- 로딩 팝업 -->
@@ -329,6 +347,17 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const resultSection = document.getElementById('resultSection');
+            const submitButton = document.getElementById('submitButton');
+            const resultContent = document.getElementById('resultContent').innerHTML.trim();
+            
+            if (resultSection.style.display === 'block' && !resultContent.includes('<!-- AJAX 결과가 여기에 표시됩니다 -->')) {
+                submitButton.style.display = 'block';
+            }
+
+            document.getElementById('questSearchForm').addEventListener('submit', function(event) {
+                event.preventDefault();
         // 퀘스트 검색 폼 AJAX 처리
         document.getElementById('questSearchForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -432,58 +461,10 @@
             resultSection.style.display = 'block';
         }
 
-        // 샘플 결과 표시 (백엔드 연결 전 테스트용)
-        function displaySampleResult(questInput) {
-            const sampleData = {
-                quests: [
-                    {
-                        title: `${questInput} 관련 퀘스트 1`,
-                        location: "강남역 근처",
-                        description: `${questInput}에 관련된 첫 번째 미션입니다. 지정된 장소에서 특별한 경험을 해보세요.`,
-                        address: "서울시 강남구 강남대로 123"
-                    },
-                    {
-                        title: `${questInput} 관련 퀘스트 2`,
-                        location: "홍대입구역 근처",
-                        description: `${questInput}와 연관된 두 번째 도전 과제입니다. 창의적인 활동이 포함되어 있습니다.`,
-                        address: "서울시 마포구 홍익로 456"
-                    },
-                    {
-                        title: `${questInput} 관련 퀘스트 3`,
-                        location: "명동역 근처",
-                        description: `${questInput}의 마지막 단계입니다. 모든 퀘스트를 완료하면 특별한 보상이 기다립니다.`,
-                        address: "서울시 중구 명동길 789"
-                    }
-                ]
-            };
-
-            displayResult(sampleData);
-        }
-
-        // 퀘스트 생성 폼 유효성 검사
-        document.getElementById('questForm').addEventListener('submit', function(event) {
-            const missionInputs = document.querySelectorAll('input[name^="mission_"]');
-            let hasAtLeastOneMission = false;
-
-            missionInputs.forEach(input => {
-                if (input.value.trim() !== '') {
-                    hasAtLeastOneMission = true;
-                }
             });
-
-            if (!hasAtLeastOneMission) {
-                event.preventDefault();
-                alert('적어도 하나의 퀘스트는 입력해야 시작할 수 있습니다.');
-            }
         });
 
-        // Enter 키 이벤트 처리
-        document.querySelector('.custom-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('questSearchForm').dispatchEvent(new Event('submit'));
-            }
-        });
+        // ... a place for other functions like displayResult, showLoading, hideLoading
     </script>
 </body>
 </html>

@@ -119,7 +119,7 @@ async def custom_input_page(request: Request, set_id: int = None):
     set_details = []
     if set_id:
         set_details = get_set_by_id(set_id)
-    
+    print(set_details)
     return templates.TemplateResponse("custom.html", {
         "request": request,
         "set_details": set_details
