@@ -7,7 +7,8 @@ from fastapi.encoders import jsonable_encoder
 from server.api.location import router as location_router
 from server.api.quest import router as quest_router
 from server.api.recommend import router as recommend_router
-from server.services.client import get_user, save_user
+from server.api.image_upload import router as image_upload_router
+from server.services.client import get_user, save_user, get_all_categories
 from server.utils import CustomJSONEncoder
 import pandas as pd
 
@@ -31,6 +32,7 @@ templates = Jinja2Templates(directory="server/templates")
 app.include_router(location_router, prefix="/api")
 app.include_router(quest_router, prefix="/api")
 app.include_router(recommend_router, prefix="/api")
+app.include_router(image_upload_router, prefix="/api")
 
 @app.get("/")
 async def read_root(request: Request):
@@ -54,8 +56,9 @@ async def handle_create_user(
     return RedirectResponse(url="/category", status_code=303)
 
 @app.get("/category")
-async def show_categories(request: Request):
-    return templates.TemplateResponse("category.html", {"request": request})
+async def category_page(request: Request):
+    categories = get_all_categories()
+    return templates.TemplateResponse("category.html", {"request": request, "categories": categories})
 
 @app.get("/quest")
 async def quest_course(request: Request, theme: str = "추천 코스"):
@@ -68,29 +71,6 @@ async def quest_course(request: Request, theme: str = "추천 코스"):
         "request": request,
         "theme": theme,
         "steps": steps
-    })
-    
-from fastapi import FastAPI, Request, UploadFile, File
-
-import shutil
-import os
-
-UPLOAD_DIR = "server/static/uploads"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-@app.post("/upload-photo")
-async def upload_photo(request: Request, photo: UploadFile = File(...)):
-    file_location = os.path.join(UPLOAD_DIR, photo.filename)
-    with open(file_location, "wb") as buffer:
-        shutil.copyfileobj(photo.file, buffer)
-
-    return templates.TemplateResponse("quest_detail.html", {
-        "request": request,
-        "quest": {
-            "title": "업로드된 퀘스트 예시",
-            "description": "사진이 업로드되었습니다!",
-            "photo_url": f"/static/uploads/{photo.filename}"
-        }
     })
 
 # server/app.py 맨 아래에 잠깐 추가

@@ -1,17 +1,27 @@
-{% extends "base.html" %}
-{% block content %}
-
-{% block body_attrs %}data-redirect-url="/"{% endblock %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>퀘스트 진행</title>
+  <script type="text/javascript" src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=bfo3zjan3s"></script>
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
 
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   body {
     background-color: #1a1a2e !important;
-    color: #e0e0e0 !important;
+    color: #ffffff !important;
     font-family: 'DotGothic16', sans-serif !important;
     margin: 0;
     padding: 0;
+    overflow: hidden;
   }
 
   .quest-course-container {
@@ -33,7 +43,7 @@
   }
 
   .quest-list h3 {
-    color: #e0fbfc;
+    color: #ffffff;
     font-size: 2rem;
     margin: 0 0 30px 0;
     text-align: center;
@@ -106,7 +116,7 @@
   }
 
   .quest-title {
-    color: #e0fbfc;
+    color: #ffffff;
     font-size: 1.4rem;
     font-weight: bold;
     margin: 0 0 15px 0;
@@ -114,7 +124,7 @@
   }
 
   .quest-mission {
-    color: #98c1d9;
+    color: #ffffff;
     font-size: 1rem;
     margin: 10px 0;
     padding: 12px;
@@ -125,7 +135,7 @@
   }
 
   .quest-description {
-    color: #e0e0e0;
+    color: #ffffff;
     font-size: 0.9rem;
     margin: 10px 0;
     opacity: 0.8;
@@ -236,7 +246,7 @@
   }
 
   .modal-text {
-    color: #e0fbfc;
+    color: #ffffff;
     font-size: 1.3rem;
     font-weight: bold;
     margin-bottom: 2rem;
@@ -261,39 +271,70 @@
   }
 
   .confirm-btn {
-    background: linear-gradient(135deg, #3d5a80, #1f4068);
-    color: #e0fbfc;
+    background: linear-gradient(145deg, #3d5a80, #1f4068);
+    color: #ffffff;
     border-color: #98c1d9;
   }
 
   .confirm-btn:hover {
-    background: linear-gradient(135deg, #4a6fa5, #3d5a80);
+    background: linear-gradient(145deg, #4a6fa5, #3d5a80);
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(152, 193, 217, 0.3);
   }
 
   .cancel-btn {
-    background: linear-gradient(135deg, #415a77, #162447);
-    color: #e0e0e0;
+    background: linear-gradient(145deg, #415a77, #162447);
+    color: #ffffff;
     border-color: #415a77;
   }
 
   .cancel-btn:hover {
-    background: linear-gradient(135deg, #5a7a9a, #415a77);
+    background: linear-gradient(145deg, #5a7a9a, #415a77);
     transform: translateY(-2px);
   }
+
+  /* Additional animations for markers */
+  @keyframes markerPulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    50% { 
+      transform: scale(1.1);
+      box-shadow: 0 8px 30px rgba(152, 193, 217, 0.5);
+    }
+  }
+
+  @keyframes clearedPulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+    }
+    50% { 
+      transform: scale(1.05);
+      box-shadow: 0 8px 30px rgba(52, 206, 87, 0.6);
+    }
+  }
+
+  @keyframes markerBounce {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-8px); }
+    60% { transform: translateY(-4px); }
+  }
 </style>
+</head>
+<body>
 
 <div class="quest-course-container">
   <aside class="quest-list">
     <h3>🎮 퀘스트 {{ theme }}</h3>
     <div class="quest-card-list">
       {% for step in steps %}
-      <div class="quest-card-ui" data-index="{{ loop.index0 }}" data-id="{{ step.id }}" data-title="{{ step.title }}">
+      <div class="quest-card-ui {% if step.is_cleared == 1 %}completed{% endif %}" data-index="{{ loop.index0 }}" data-id="{{ step.id }}" data-title="{{ step.title }}">
         <div class="quest-number">{{ loop.index }}</div>
         <div class="quest-content">
           <div class="quest-title">📍 {{ step.title }}</div>
-          <div class="quest-mission">🎯 {{ step.mission or "특별한 미션을 수행해보세요!" }}</div>
+          <div class="quest-mission">🎯 {{ step.get('mission', '특별한 미션을 수행해보세요!') }}</div>
           <div class="quest-description">{{ step.description }}</div>
           <div class="quest-coords">좌표: {{ step.lat }}, {{ step.lng }}</div>
         </div>
@@ -329,6 +370,33 @@
     let selectedQuestId = null;
 
     const completedQuests = JSON.parse(localStorage.getItem("completedQuests") || "[]");
+
+    // Add marker animation styles to head
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes markerPulse {
+        0%, 100% { 
+          transform: scale(1);
+          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        50% { 
+          transform: scale(1.1);
+          box-shadow: 0 8px 30px rgba(152, 193, 217, 0.5);
+        }
+      }
+      
+      @keyframes clearedPulse {
+        0%, 100% { 
+          transform: scale(1);
+          box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+        50% { 
+          transform: scale(1.05);
+          box-shadow: 0 8px 30px rgba(52, 206, 87, 0.6);
+        }
+      }
+    `;
+    document.head.appendChild(style);
 
     // Calculate map bounds to fit all markers
     function calculateMapBounds(steps) {
@@ -387,36 +455,85 @@
       console.log(`Step ${index}:`, step);
       if (step.lat && step.lng && step.lat !== 0 && step.lng !== 0) {
         const position = new naver.maps.LatLng(step.lat, step.lng);
+        const isCleared = step.is_cleared === 1 || completedQuests.includes(step.id);
+        
+        // Different marker styles based on cleared status
+        let markerContent;
+        if (isCleared) {
+          markerContent = `
+            <div style="
+              background: linear-gradient(135deg, #28a745, #155724);
+              border: 3px solid #34ce57;
+              border-radius: 50%;
+              width: 45px;
+              height: 45px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              color: #e0fbfc;
+              font-weight: bold;
+              font-size: 1.4rem;
+              text-shadow: 1px 1px #0d1b2a;
+              box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+              animation: clearedPulse 2s ease-in-out infinite;
+              transition: all 0.3s ease;
+            ">
+              ✓
+            </div>`;
+        } else {
+          markerContent = `
+            <div style="
+              background: linear-gradient(135deg, #3d5a80, #1f4068);
+              border: 3px solid #98c1d9;
+              border-radius: 50%;
+              width: 45px;
+              height: 45px;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              color: #e0fbfc;
+              font-weight: bold;
+              font-size: 1.3rem;
+              text-shadow: 1px 1px #0d1b2a;
+              box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+              animation: markerPulse 3s ease-in-out infinite;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+              ${index + 1}
+            </div>`;
+        }
 
         const marker = new naver.maps.Marker({
           position: position,
           map: map,
           title: step.title,
           icon: {
-            content: `
-              <div style="
-                background: linear-gradient(135deg, #3d5a80, #1f4068);
-                border: 3px solid #98c1d9;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                color: #e0fbfc;
-                font-weight: bold;
-                font-size: 1.2rem;
-                text-shadow: 1px 1px #0d1b2a;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-              ">
-                ${index + 1}
-              </div>`,
-            anchor: new naver.maps.Point(20, 20)
+            content: markerContent,
+            anchor: new naver.maps.Point(22, 22)
           }
         });
 
-        const infoWindow = new naver.maps.InfoWindow({
-          content: `
+        // Different info window content based on cleared status
+        let infoContent;
+        if (isCleared) {
+          infoContent = `
+            <div style="
+              background: linear-gradient(135deg, #1b263b, #162447);
+              border: 2px solid #28a745;
+              border-radius: 12px;
+              padding: 15px 20px;
+              color: #e0fbfc;
+              font-weight: bold;
+              box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+              min-width: 200px;
+              text-align: center;
+            ">
+              <div style="font-size: 1.1rem; margin-bottom: 8px; color: #34ce57;">✓ ${step.title}</div>
+              <div style="font-size: 0.9rem; color: #98c1d9;">퀘스트 완료!</div>
+            </div>`;
+        } else {
+          infoContent = `
             <div style="
               background: linear-gradient(135deg, #1b263b, #162447);
               border: 2px solid #98c1d9;
@@ -429,14 +546,18 @@
               text-align: center;
             ">
               <div style="font-size: 1.1rem; margin-bottom: 8px;">📍 ${step.title}</div>
-              <div style="font-size: 0.9rem; color: #98c1d9; font-style: italic;">${step.mission || "특별한 미션을 수행해보세요!"}</div>
-            </div>`,
+              <div style="font-size: 0.9rem; color: #98c1d9; font-style: italic;">${step.mission || "퀘스트를 수행해주세요!"}</div>
+            </div>`;
+        }
+
+        const infoWindow = new naver.maps.InfoWindow({
+          content: infoContent,
           backgroundColor: "transparent",
           borderColor: "transparent",
           disableAnchor: true
         });
 
-        markers[index] = { marker, infoWindow, position };
+        markers[index] = { marker, infoWindow, position, isCleared };
       } else {
         markers[index] = null;
       }
@@ -451,20 +572,23 @@
     cards.forEach((card, index) => {
       const questId = parseInt(card.dataset.id);
       const questTitle = card.dataset.title;
+      const isCompleted = completedQuests.includes(questId) || steps[index].is_cleared === 1;
 
-      if (completedQuests.includes(questId)) {
+      if (isCompleted) {
         card.classList.add("completed");
         return;
       }
 
       // Map interactions
       if (markers[index]) {
-        const { marker, infoWindow, position } = markers[index];
+        const { marker, infoWindow, position, isCleared } = markers[index];
 
         card.addEventListener("mouseover", () => {
-          map.setZoom(17);
-          map.panTo(position);
-          infoWindow.open(map, marker);
+          if (!isCleared) {
+            map.setZoom(17);
+            map.panTo(position);
+            infoWindow.open(map, marker);
+          }
         });
 
         card.addEventListener("mouseout", () => {
@@ -473,12 +597,14 @@
       }
 
       card.addEventListener("click", () => {
-        selectedQuestId = questId;
-        modalText.innerHTML = `
-          <div style="margin-bottom: 15px;">🎯 <strong>${questTitle}</strong></div>
-          <div style="font-size: 1rem; color: #98c1d9;">이 퀘스트를 진행하시겠습니까?</div>
-        `;
-        modal.style.display = "flex";
+        if (!isCompleted) {
+          selectedQuestId = questId;
+          modalText.innerHTML = `
+            <div style="margin-bottom: 15px;">🎯 <strong>${questTitle}</strong></div>
+            <div style="font-size: 1rem; color: #98c1d9;">이 퀘스트를 진행하시겠습니까?</div>
+          `;
+          modal.style.display = "flex";
+        }
       });
     });
 
@@ -501,22 +627,7 @@
       }
     });
   });
-
-  // Redirect handling
-  window.addEventListener("DOMContentLoaded", () => {
-    const params = new URLSearchParams(window.location.search);
-    const fromRecommend = params.get("from_recommend");
-
-    if (fromRecommend === "1") {
-      const redirectTo = document.body.dataset.redirectUrl || "/";
-      if (sessionStorage.getItem("redirectedFromRecommend")) {
-        sessionStorage.removeItem("redirectedFromRecommend");
-        window.location.href = redirectTo;
-      } else {
-        sessionStorage.setItem("redirectedFromRecommend", "true");
-      }
-    }
-  });
 </script>
 
-{% endblock %}
+</body>
+</html>

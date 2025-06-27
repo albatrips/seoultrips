@@ -3,7 +3,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import RedirectResponse, HTMLResponse
 import os, shutil
 from random import choice
-from server.services.client import get_routes_by_categories, get_set_by_id, create_quests, get_all_quests
+from server.services.client import get_routes_by_categories, get_set_by_id, create_quests, get_all_quests, get_quest_by_id
 import json
 
 router = APIRouter()
@@ -74,23 +74,11 @@ async def quest_course(request: Request):
         "steps": steps
     })
 
-# ✅ 퀘스트 상세 페이지
+# ✅ 퀘스트 상세 페이지 - 개선된 버전
 @router.get("/quest/{quest_id}")
 async def quest_detail(request: Request, quest_id: int, result: str = "", theme: str = "기본"):
-    from server.services.client import get_all_quests
-    
-    # Get all quests and find the specific quest
-    all_quests = get_all_quests()
-    quest = next((q for q in all_quests if q["id"] == quest_id), None)
-    
-    if quest is None:
-        quest = {
-            "id": quest_id,
-            "title": "예시 퀘스트",
-            "lat": 37.579617,
-            "lng": 126.977041,
-            "description": "예시 퀘스트입니다."
-        }
+    # Get detailed quest information including photomission
+    quest = get_quest_by_id(quest_id)
     
     return templates.TemplateResponse("quest_detail.html", {
         "request": request,
@@ -99,36 +87,36 @@ async def quest_detail(request: Request, quest_id: int, result: str = "", theme:
         "theme": theme
     })
 
-# ✅ 사진 업로드 및 성공/실패 판단
+# ✅ 사진 업로드 및 성공/실패 판단 - 개선된 버전
 @router.post("/upload-photo")
-async def upload_photo(
+async def upload_photo_improved(
     request: Request,
     photo: UploadFile = File(...),
     quest_id: int = Form(...)
 ):
-    file_path = os.path.join(UPLOAD_DIR, photo.filename)
+    # Get quest details with photomission
+    quest = get_quest_by_id(quest_id)
+    
+    # Save uploaded photo
+    file_path = os.path.join(UPLOAD_DIR, f"quest_{quest_id}_{photo.filename}")
     with open(file_path, "wb") as f:
         shutil.copyfileobj(photo.file, f)
 
-    ## TODO : 삭제하기
-
-
-
+    # Simple success/failure determination (can be enhanced with AI later)
     result = choice(["success", "fail"])
-    quests = getattr(request.app.state, "current_quests", [])
-    quest = next((q for q in quests if q["id"] == quest_id), {
-        "id": quest_id,
-        "title": "퀘스트",
-        "lat": 0.0,
-        "lng": 0.0,
-        "description": "기본 퀘스트입니다."
-    })
+    
+    # Create mock verification result
+    verification_result = {
+        "score": 85 if result == "success" else 45,
+        "feedback": f"{'훌륭한 사진입니다! 포토 미션을 성공적으로 완료했습니다.' if result == 'success' else '포토 미션 요구사항을 다시 확인해보세요. 다시 도전해주세요!'}"
+    }
 
     return templates.TemplateResponse("quest_detail.html", {
         "request": request,
         "quest": quest,
         "result": result,
-        "uploaded_photo": f"/static/uploads/{photo.filename}"
+        "verification": verification_result,
+        "uploaded_photo": f"/static/uploads/quest_{quest_id}_{photo.filename}"
     })
 
 # ✅ 사용자 정의 퀘스트 입력 페이지

@@ -3,174 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커스텀 퀘스트</title>
+    <title>퀘스트 커스터마이저</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             background-color: #1a1a2e;
             color: #e0e0e0;
             font-family: 'DotGothic16', sans-serif;
             margin: 0;
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(61, 90, 128, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(152, 193, 217, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(31, 64, 104, 0.1) 0%, transparent 50%);
+            animation: backgroundMove 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundMove {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
 
         .main-container {
-            width: 100%;
-            max-width: 1200px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
             position: relative;
         }
 
-        /* 퀘스트 입력 섹션 */
-        .quest-search-section {
+        .header-section {
             text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
-            background-color: #162447;
-            border-radius: 10px;
-            border: 2px solid #415a77;
+            margin-bottom: 50px;
+            position: relative;
         }
 
-        .submitButtonUser {
-            padding: 15px 25px;
-            background-color: #415a77;
+        .header-title {
+            font-size: 3rem;
             color: #e0fbfc;
-            border: 2px solid #98c1d9;
-            border-radius: 5px;
-            font-family: 'DotGothic16', sans-serif;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
+            text-shadow: 2px 2px #0d1b2a;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #e0fbfc, #98c1d9, #3d5a80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 3s ease-in-out infinite alternate;
         }
 
-        .quest-search-form {
+        @keyframes titleGlow {
+            from { filter: drop-shadow(0 0 10px rgba(224, 251, 252, 0.3)); }
+            to { filter: drop-shadow(0 0 20px rgba(152, 193, 217, 0.5)); }
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #98c1d9;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        /* Quest Input Section */
+        .quest-input-section {
+            background: linear-gradient(135deg, #162447, #1b263b);
+            border: 3px solid #415a77;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 50px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quest-input-section::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+            border-radius: 20px;
+            z-index: -1;
+            animation: borderRotate 3s linear infinite;
+        }
+
+        @keyframes borderRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .input-form {
             display: flex;
-            justify-content: center;
-            gap: 15px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .submitButtonUser:hover {
-            background-color: #3d5a80;
-            box-shadow: 0 0 10px rgba(152, 193, 217, 0.5);
-        }
-
-        .quest-search-button {
-            padding: 15px 25px;
-            background-color: #415a77;
-            color: #e0fbfc;
-            border: 2px solid #98c1d9;
-            border-radius: 5px;
-            font-family: 'DotGothic16', sans-serif;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            white-space: nowrap;
-        }
-
-        .quest-search-button:hover {
-            background-color: #3d5a80;
-            box-shadow: 0 0 10px rgba(152, 193, 217, 0.5);
-        }
-
-        /* 퀘스트 생성 폼 섹션 */
-        .quest-create-section {
-            margin-bottom: 100px;
-        }
-
-        .cards-container {
-            display: flex;
-            justify-content: center;
             gap: 20px;
-            margin-bottom: 40px;
+            align-items: center;
+            justify-content: center;
             flex-wrap: wrap;
         }
 
-        .mission-card {
-            background-color: #1b263b;
-            border: 2px solid #415a77;
-            border-radius: 10px;
-            padding: 20px;
-            width: 30%;
+        .quest-input {
+            flex: 1;
             min-width: 300px;
-            height: 350px;
+            padding: 20px 25px;
+            border-radius: 15px;
+            border: 2px solid #415a77;
+            background: linear-gradient(135deg, #1b263b, #162447);
+            color: #e0fbfc;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1.3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.3);
         }
 
-        .mission-card h3 {
+        .quest-input:focus {
+            outline: none;
+            border-color: #98c1d9;
+            box-shadow: 0 0 20px rgba(152, 193, 217, 0.4), inset 0 2px 10px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .quest-input::placeholder {
+            color: #98c1d9;
+            opacity: 0.7;
+            font-style: italic;
+        }
+
+        .generate-btn {
+            padding: 20px 35px;
+            background: linear-gradient(135deg, #3d5a80, #1f4068);
             color: #e0fbfc;
+            border: 2px solid #98c1d9;
+            border-radius: 15px;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
             text-shadow: 1px 1px #0d1b2a;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .generate-btn:hover {
+            background: linear-gradient(135deg, #4a6fa5, #3d5a80);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(152, 193, 217, 0.3);
+        }
+
+        /* Quest Cards Section */
+        .quests-section {
+            display: none;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .quests-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .quest-card {
+            background: linear-gradient(135deg, #1b263b, #162447);
+            border: 3px solid #415a77;
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .quest-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(152, 193, 217, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .quest-card:hover::before {
+            left: 100%;
+        }
+
+        .quest-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: #98c1d9;
+            box-shadow: 0 20px 40px rgba(152, 193, 217, 0.2);
+        }
+
+        .quest-number {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3d5a80, #1f4068);
+            border: 3px solid #98c1d9;
+            color: #e0fbfc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
             font-size: 1.5rem;
-            margin: 0 0 15px 0;
-            border-bottom: 1px solid #415a77;
+            text-shadow: 1px 1px #0d1b2a;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .quest-content {
+            margin-right: 70px;
+        }
+
+        .quest-title {
+            color: #e0fbfc;
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px #0d1b2a;
+            border-bottom: 2px solid #415a77;
             padding-bottom: 10px;
         }
 
-        .mission-card p {
-            margin: 12px 0;
-            font-size: 1rem;
-            line-height: 1.5;
+        .quest-detail {
+            margin: 15px 0;
+            padding: 12px 15px;
+            background: rgba(13, 27, 42, 0.6);
+            border-radius: 10px;
+            border-left: 4px solid #3d5a80;
         }
 
-        .mission-card span {
+        .quest-detail-label {
             color: #98c1d9;
+            font-weight: bold;
+            font-size: 1rem;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .quest-detail-value {
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .quest-mission {
+            background: linear-gradient(135deg, rgba(61, 90, 128, 0.3), rgba(31, 64, 104, 0.3));
+            border-left-color: #98c1d9;
+            border-left-width: 5px;
+        }
+
+        .quest-mission .quest-detail-value {
+            color: #98c1d9;
+            font-style: italic;
             font-weight: bold;
         }
 
-        .mission-card input, .mission-card textarea {
-            width: 95%;
-            background: #162447;
-            border: 1px solid #415a77;
-            color: #e0e0e0;
-            padding: 8px;
-            margin-top: 4px;
-            font-family: 'DotGothic16', sans-serif;
-            font-size: 0.9rem;
-            border-radius: 3px;
+        /* Start Quest Button */
+        .start-quest-section {
+            text-align: center;
+            margin-top: 50px;
         }
 
-        .mission-card textarea {
-            height: 60px;
-            resize: vertical;
-        }
-
-        .mission-title-input {
-            font-size: 1.5rem;
-            margin: 0 0 15px 0;
-            border-bottom: 1px solid #415a77;
-            padding: 0 0 10px 0;
-            color: #e0fbfc;
-            width: 100%;
-        }
-
-        /* 퀘스트 시작 버튼 */
-        .start-quest-button {
-            position: fixed;
-            bottom: 40px;
-            right: 40px;
-            padding: 15px 30px;
-            background-color: #3d5a80;
+        .start-quest-btn {
+            display: inline-block;
+            padding: 25px 50px;
+            background: linear-gradient(135deg, #3d5a80, #1f4068);
             color: #e0fbfc;
             text-decoration: none;
-            border: 2px solid #98c1d9;
-            border-radius: 8px;
+            border: 3px solid #98c1d9;
+            border-radius: 20px;
             font-family: 'DotGothic16', sans-serif;
-            font-size: 1.4rem;
+            font-size: 1.8rem;
+            font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
+            text-shadow: 2px 2px #0d1b2a;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
         }
 
-        .start-quest-button:hover {
-            background-color: #98c1d9;
-            color: #1b263b;
-            box-shadow: 0 0 15px #98c1d9;
+        .start-quest-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(152, 193, 217, 0.2), transparent);
+            transition: left 0.6s ease;
         }
 
-        /* 로딩 팝업 스타일 */
+        .start-quest-btn:hover::before {
+            left: 100%;
+        }
+
+        .start-quest-btn:hover {
+            background: linear-gradient(135deg, #4a6fa5, #3d5a80);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 15px 40px rgba(152, 193, 217, 0.4);
+        }
+
+        /* Loading Animation */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -178,44 +343,29 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
+            background: rgba(26, 26, 46, 0.9);
             z-index: 1000;
             justify-content: center;
             align-items: center;
         }
 
-        .loading-popup {
-            background-color: #1b263b;
-            border: 2px solid #98c1d9;
-            border-radius: 15px;
-            padding: 40px;
+        .loading-content {
             text-align: center;
-            box-shadow: 0 0 30px rgba(152, 193, 217, 0.5);
-            animation: pulse 2s infinite;
+            background: linear-gradient(135deg, #1b263b, #162447);
+            border: 3px solid #98c1d9;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
 
         .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 4px solid #415a77;
-            border-top: 4px solid #98c1d9;
+            width: 80px;
+            height: 80px;
+            border: 6px solid #415a77;
+            border-top: 6px solid #98c1d9;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        .loading-text {
-            color: #e0fbfc;
-            font-size: 1.5rem;
-            font-family: 'DotGothic16', sans-serif;
-            margin: 0;
-        }
-
-        .loading-subtext {
-            color: #98c1d9;
-            font-size: 1rem;
-            font-family: 'DotGothic16', sans-serif;
-            margin: 10px 0 0 0;
+            margin: 0 auto 30px;
         }
 
         @keyframes spin {
@@ -223,248 +373,245 @@
             100% { transform: rotate(360deg); }
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* 결과 표시 스타일 */
-        .result-section {
-            display: none;
-            margin-top: 30px;
-            padding: 20px;
-            background-color: #162447;
-            border: 2px solid #98c1d9;
-            border-radius: 10px;
-            animation: fadeIn 0.5s ease-in;
-        }
-
-        .result-title {
+        .loading-text {
             color: #e0fbfc;
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            text-align: center;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
         }
 
-        .result-content {
-            color: #e0e0e0;
-            font-size: 1rem;
-            line-height: 1.6;
+        .loading-subtext {
+            color: #98c1d9;
+            font-size: 1.2rem;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Hidden form for submission */
+        .hidden-form {
+            display: none;
         }
 
-        .custom-input {
-          flex: 1;
-          min-width: 300px;
-          padding: 15px;
-          border-radius: 5px;
-          border: 2px solid #415a77;
-          background-color: #1b263b;
-          color: #e0e0e0;
-          font-family: 'DotGothic16', sans-serif;
-          font-size: 1.2rem;
-          text-align: center;
-          transition: all 0.3s ease;
+        /* Responsive */
+        @media (max-width: 768px) {
+            .quests-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quest-input {
+                min-width: 250px;
+                font-size: 1.1rem;
+            }
+            
+            .header-title {
+                font-size: 2.2rem;
+            }
         }
-
-        .custom-input:focus {
-          outline: none;
-          border-color: #98c1d9;
-          box-shadow: 0 0 10px rgba(152, 193, 217, 0.3);
-        }
-
-        /* placeholder 스타일도 통일감을 위해 세부 조정 */
-        .custom-input::placeholder {
-          color: #98c1d9;
-          opacity: 0.7;
-          font-style: italic;
-        }
-
-        /* 모바일·태블릿 대응: 화면이 좁아지면 폰트 축소 */
-        @media (max-width: 600px) {
-          .custom-input {
-            font-size: 1rem;
-            padding: 12px;
-          }
-        }
-
     </style>
 </head>
 <body>
     <div class="main-container">
-        <div class="input-area">
-            <div class="quest-search-section">
-                <h2 class="section-title">퀘스트 생성</h2>
-                <form class="quest-search-form" id="questSearchForm">
-                    <input type="text" name="quest_input" class="custom-input" placeholder="원하는 퀘스트를 직접 입력해보세요..." required>
-                    <button type="submit" class="submitButtonUser">퀘스트 생성</button>
-                </form>
-            </div>
-            <form id="questForm" action="/api/start-quest" method="post">
-                <div class="result-section" id="resultSection" style="display: {% if set_details %}block{% else %}none{% endif %};">
-                    <h3 class="result-title">생성된 퀘스트</h3>
-                    <div class="result-content" id="resultContent">
-                        <!-- 전달된 데이터: {{ set_details }} -->
-                        {% if set_details %}
-                            {% for detail in set_details %}
-                            <div style="margin-bottom: 20px; padding: 15px; background-color: #1b263b; border-radius: 8px; border: 1px solid #415a77;">
-                                <h4 style="color: #98c1d9; margin: 0 0 10px 0;">
-                                    퀘스트 {{ loop.index }}: <input type="text" name="mission_{{ loop.index0 }}" value="{{ detail.place_name }}" class="mission-title-input" style="background: transparent; border: none; color: #e0fbfc;">
-                                </h4>
-                                <p style="margin: 5px 0;"><span style="color: #98c1d9;">장소:</span> {{ detail.place_name }}</p>
-                                <p style="margin: 5px 0;"><span style="color: #98c1d9;">설명:</span> 
-                                    <textarea name="description_{{ loop.index0 }}" style="width: 95%; background: #162447; border: 1px solid #415a77; color: #e0e0e0; padding: 8px; margin-top: 4px; font-family: 'DotGothic16', sans-serif; font-size: 0.9rem; border-radius: 3px; height: 60px; resize: vertical;">{{ detail.description }}</textarea>
-                                </p>
-                                <input type="hidden" name="course_id_{{ loop.index0 }}" value="{{ detail.course_id }}">
-                                <input type="hidden" name="place_name_{{ loop.index0 }}" value="{{ detail.place_name }}">
-                                <input type="hidden" name="address_{{ loop.index0 }}" value="{{ detail.address }}">
-                                <input type="hidden" name="lat_{{ loop.index0 }}" value="{{ detail.lat }}">
-                                <input type="hidden" name="lng_{{ loop.index0 }}" value="{{ detail.lng }}">
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                        <!-- 결과가 여기에 표시됩니다 -->
-                        {% endif %}
-                    </div>
-                </div>
-                <button type="submit" id="submitButton" class="start-quest-button">퀘스트 시작하기</button>
+        <div class="header-section">
+            <h1 class="header-title">🎮 퀘스트 커스터마이저</h1>
+            <p class="subtitle">당신만의 특별한 모험을 설계하세요!</p>
+        </div>
+
+        <div class="quest-input-section">
+            <form class="input-form" id="questForm">
+                <input type="text" name="quest_input" class="quest-input" placeholder="원하는 퀘스트를 입력해보세요... (예: 강남에서 카페 투어하기)" required>
+                <button type="submit" class="generate-btn">⚡ 퀘스트 생성</button>
             </form>
+        </div>
+
+        <div class="quests-section" id="questsSection" {% if set_details %}style="display: block;"{% endif %}>
+            <div class="quests-grid" id="questsGrid">
+                {% if set_details %}
+                    {% for detail in set_details %}
+                    <div class="quest-card">
+                        <div class="quest-number">{{ loop.index }}</div>
+                        <div class="quest-content">
+                            <h3 class="quest-title">📍 {{ detail.place_name }}</h3>
+                            
+                            {% if detail.mission %}
+                            <div class="quest-detail quest-mission">
+                                <span class="quest-detail-label">🎯 미션</span>
+                                <div class="quest-detail-value">{{ detail.mission }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if detail.description %}
+                            <div class="quest-detail">
+                                <span class="quest-detail-label">📝 설명</span>
+                                <div class="quest-detail-value">{{ detail.description }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if detail.take_time %}
+                            <div class="quest-detail">
+                                <span class="quest-detail-label">⏱️ 소요 시간</span>
+                                <div class="quest-detail-value">{{ detail.take_time }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if detail.signgu %}
+                            <div class="quest-detail">
+                                <span class="quest-detail-label">🗺️ 지역</span>
+                                <div class="quest-detail-value">{{ detail.signgu }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if detail.photomission %}
+                            <div class="quest-detail">
+                                <span class="quest-detail-label">📸 포토 미션</span>
+                                <div class="quest-detail-value">{{ detail.photomission }}</div>
+                            </div>
+                            {% endif %}
+
+                            {% if detail.lat and detail.lng %}
+                            <div class="quest-detail">
+                                <span class="quest-detail-label">🧭 좌표</span>
+                                <div class="quest-detail-value">{{ detail.lat }}, {{ detail.lng }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            {% if set_details %}
+            <div class="start-quest-section">
+                <form action="/api/start-quest" method="post" class="hidden-form" id="startQuestForm">
+                    {% for detail in set_details %}
+                    <input type="hidden" name="course_id_{{ loop.index0 }}" value="{{ detail.course_id }}">
+                    <input type="hidden" name="mission_{{ loop.index0 }}" value="{{ detail.mission or detail.place_name }}">
+                    <input type="hidden" name="place_name_{{ loop.index0 }}" value="{{ detail.place_name }}">
+                    <input type="hidden" name="description_{{ loop.index0 }}" value="{{ detail.description }}">
+                    <input type="hidden" name="address_{{ loop.index0 }}" value="{{ detail.address or '' }}">
+                    <input type="hidden" name="lat_{{ loop.index0 }}" value="{{ detail.lat }}">
+                    <input type="hidden" name="lng_{{ loop.index0 }}" value="{{ detail.lng }}">
+                    {% endfor %}
+                </form>
+                <button type="button" class="start-quest-btn" onclick="document.getElementById('startQuestForm').submit();">
+                    🚀 퀘스트 시작하기
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- 로딩 팝업 -->
+    <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-popup">
+        <div class="loading-content">
             <div class="loading-spinner"></div>
             <p class="loading-text">퀘스트 생성 중...</p>
-            <p class="loading-subtext">잠시만 기다려주세요</p>
+            <p class="loading-subtext">AI가 당신만의 모험을 설계하고 있습니다</p>
         </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const resultSection = document.getElementById('resultSection');
-            const submitButton = document.getElementById('submitButton');
-            const resultContent = document.getElementById('resultContent').innerHTML.trim();
-            
-            if (resultSection.style.display === 'block' && !resultContent.includes('<!-- AJAX 결과가 여기에 표시됩니다 -->')) {
-                submitButton.style.display = 'block';
-            }
+            const questForm = document.getElementById('questForm');
+            const questsSection = document.getElementById('questsSection');
+            const loadingOverlay = document.getElementById('loadingOverlay');
 
-            document.getElementById('questSearchForm').addEventListener('submit', function(event) {
+            questForm.addEventListener('submit', function(event) {
                 event.preventDefault();
-        // 퀘스트 검색 폼 AJAX 처리
-        document.getElementById('questSearchForm').addEventListener('submit', function(event) {
-            event.preventDefault();
 
-            const questInput = document.querySelector('input[name="quest_input"]').value.trim();
-            if (!questInput) {
-                alert('퀘스트를 입력해주세요!');
-                return;
-            }
-
-            // 로딩 팝업 표시
-            showLoading();
-
-            const payload = { question: questInput };
-            console.log('[DEBUG] 보내는 페이로드:', payload);
-
-            // AJAX 요청
-            fetch('/api/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            })
-            .then(response => {
-                console.log(response);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                const questInput = document.querySelector('input[name="quest_input"]').value.trim();
+                if (!questInput) {
+                    alert('퀘스트를 입력해주세요!');
+                    return;
                 }
-                return response.json();
-            })
-            .then(data => {
-                // 로딩 팝업 숨기기
-                hideLoading();
 
-                // 결과 표시
-                displayResult(data);
-            })
-            .catch(error => {
-                // 로딩 팝업 숨기기
-                hideLoading();
+                // Show loading
+                loadingOverlay.style.display = 'flex';
 
-                console.error("Error:", error);
+                const payload = { question: questInput };
 
-                const resultSection =  document.getElementById('resultSection');
-                const resultContent = document.getElementById('resultContent');
-                resultContent.innerHTML = `
-                    <p>퀘스트 생성 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.</p>
-                    <p>에러 상세: ${error.message}</p>
-                `;
-                resultSection.style.display = 'block';
+                fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingOverlay.style.display = 'none';
+                    displayQuests(data);
+                })
+                .catch(error => {
+                    loadingOverlay.style.display = 'none';
+                    console.error("Error:", error);
+                    alert('퀘스트 생성 중 문제가 발생했습니다. 다시 시도해주세요.');
+                });
             });
-        });
 
-        // 로딩 팝업 표시
-        function showLoading() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.style.display = 'flex';
-        }
+            function displayQuests(data) {
+                const questsGrid = document.getElementById('questsGrid');
+                let html = '';
 
-        // 로딩 팝업 숨기기
-        function hideLoading() {
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.style.display = 'none';
-        }
+                if (data.quests && data.quests.length > 0) {
+                    data.quests.forEach((quest, index) => {
+                        const title = quest.mission_name || quest.location || `퀘스트 ${index + 1}`;
+                        const location = quest.location;
+                        const description = quest.description;
+                        const time = quest.expected_time;
 
-        // 결과 표시
-        function displayResult(data) {
-            const resultSection = document.getElementById('resultSection');
-            const resultContent = document.getElementById('resultContent');
+                        html += `
+                            <div class="quest-card">
+                                <div class="quest-number">${index + 1}</div>
+                                <div class="quest-content">
+                                    <h3 class="quest-title">📍 ${title}</h3>
+                                    
+                                    <div class="quest-detail quest-mission">
+                                        <span class="quest-detail-label">🎯 미션</span>
+                                        <div class="quest-detail-value">${title}</div>
+                                    </div>
 
-            let html = '';
-            if (data.quests && data.quests.length > 0) {
-                data.quests.forEach((quest, index) => {
-                    const title       = quest.mission_name ?? `퀘스트 ${index + 1}`;
-                    const location    = quest.location;
-                    const description = quest.description;
-                    const time        = quest.expected_time;
+                                    ${location ? `
+                                    <div class="quest-detail">
+                                        <span class="quest-detail-label">📍 장소</span>
+                                        <div class="quest-detail-value">${location}</div>
+                                    </div>
+                                    ` : ''}
 
-                    console.log(`quest[${index}].title:`, title);
-                    console.log(`quest[${index}].location:`, location);
-                    console.log(`quest[${index}].description:`, description);
-                    console.log(`quest[${index}].expected_time:`, time);
+                                    ${description ? `
+                                    <div class="quest-detail">
+                                        <span class="quest-detail-label">📝 설명</span>
+                                        <div class="quest-detail-value">${description}</div>
+                                    </div>
+                                    ` : ''}
+
+                                    ${time ? `
+                                    <div class="quest-detail">
+                                        <span class="quest-detail-label">⏱️ 예상 소요 시간</span>
+                                        <div class="quest-detail-value">${time}</div>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
 
                     html += `
-                        <div style="margin-bottom: 20px; padding: 15px; background-color: #1b263b; border-radius: 8px; border: 1px solid #415a77;">
-                            <h4 style="color: #98c1d9; margin: 0 0 10px 0;">
-                                퀘스트 ${index + 1}: ${title}
-                            </h4>
-                            ${location ? `<p style="margin: 5px 0;"><span style="color: #98c1d9;">장소:</span> ${location}</p>` : ''}
-                            ${description ? `<p style="margin: 5px 0;"><span style="color: #98c1d9;">설명:</span> ${description}</p>` : ''}
-                            ${time ? `<p style="margin: 5px 0;"><span style="color: #98c1d9;">예상 소요 시간:</span> ${time}</p>` : ''}
+                        <div class="start-quest-section">
+                            <button type="button" class="start-quest-btn" onclick="alert('퀘스트 데이터를 저장하고 시작하는 기능은 추후 구현 예정입니다.');">
+                                🚀 퀘스트 시작하기
+                            </button>
                         </div>
                     `;
-                });
-            } else {
-                html = '<p>결과를 불러올 수 없습니다.</p>';
+                } else {
+                    html = '<p style="text-align: center; font-size: 1.2rem; color: #98c1d9;">퀘스트를 생성할 수 없습니다. 다른 내용으로 시도해보세요.</p>';
+                }
+
+                questsGrid.innerHTML = html;
+                questsSection.style.display = 'block';
             }
-
-            resultContent.innerHTML = html;
-            resultSection.style.display = 'block';
-        }
-
-            });
         });
-
-        // ... a place for other functions like displayResult, showLoading, hideLoading
     </script>
 </body>
 </html>

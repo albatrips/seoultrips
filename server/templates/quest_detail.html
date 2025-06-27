@@ -1,19 +1,527 @@
-{% extends "base.html" %}
-{% block content %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>퀘스트 미션</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #1a1a2e;
+      color: #ffffff;
+      font-family: 'DotGothic16', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 30% 20%, rgba(61, 90, 128, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 70% 80%, rgba(152, 193, 217, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 20% 70%, rgba(31, 64, 104, 0.12) 0%, transparent 50%);
+      animation: backgroundFloat 25s ease-in-out infinite;
+      z-index: -1;
+    }
+
+    @keyframes backgroundFloat {
+      0%, 100% { transform: translate(0px, 0px) scale(1); }
+      33% { transform: translate(30px, -20px) scale(1.1); }
+      66% { transform: translate(-20px, 25px) scale(0.9); }
+    }
+
+    .quest-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .quest-card {
+      background: linear-gradient(135deg, #162447, #1b263b);
+      padding: 40px;
+      border-radius: 25px;
+      border: 3px solid #415a77;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      max-width: 600px;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .quest-card::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+      border-radius: 25px;
+      z-index: -1;
+      animation: cardGlow 4s linear infinite;
+    }
+
+    @keyframes cardGlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .quest-header {
+      text-align: center;
+      margin-bottom: 35px;
+    }
+
+    .quest-card h2 {
+      color: #ffffff;
+      font-size: 2.2rem;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px #0d1b2a;
+      background: linear-gradient(45deg, #ffffff, #98c1d9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: titlePulse 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titlePulse {
+      from { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)); }
+      to { filter: drop-shadow(0 0 25px rgba(152, 193, 217, 0.6)); }
+    }
+
+    .quest-subtitle {
+      color: #98c1d9;
+      font-size: 1rem;
+      opacity: 0.8;
+      margin-bottom: 10px;
+    }
+
+    .quest-details {
+      margin-bottom: 35px;
+    }
+
+    .detail-section {
+      background: linear-gradient(135deg, rgba(31, 64, 104, 0.3), rgba(27, 38, 59, 0.3));
+      border: 2px solid #415a77;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .detail-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(152, 193, 217, 0.1), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .detail-section:hover::before {
+      left: 100%;
+    }
+
+    .detail-section:hover {
+      border-color: #98c1d9;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(152, 193, 217, 0.2);
+    }
+
+    .detail-label {
+      color: #98c1d9;
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .detail-value {
+      color: #ffffff;
+      font-size: 1rem;
+      line-height: 1.6;
+      opacity: 0.95;
+    }
+
+    .mission-section .detail-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      background: linear-gradient(45deg, #ffffff, #e0fbfc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .photomission-section {
+      background: linear-gradient(135deg, rgba(152, 193, 217, 0.2), rgba(61, 90, 128, 0.2));
+      border-color: #98c1d9;
+      animation: photomissionGlow 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes photomissionGlow {
+      from { box-shadow: 0 0 20px rgba(152, 193, 217, 0.3); }
+      to { box-shadow: 0 0 30px rgba(152, 193, 217, 0.5); }
+    }
+
+    .photomission-section .detail-value {
+      font-size: 1.1rem;
+      font-style: italic;
+      color: #e0fbfc;
+      font-weight: bold;
+    }
+
+    .upload-section {
+      margin: 35px 0;
+      text-align: center;
+    }
+
+    .upload-intro {
+      color: #98c1d9;
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+
+    .upload-btn {
+      background: linear-gradient(145deg, #3d5a80, #1f4068);
+      color: #ffffff;
+      padding: 20px 35px;
+      border-radius: 15px;
+      border: 2px solid #98c1d9;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 1.3rem;
+      display: inline-block;
+      box-shadow: 
+        0 8px 25px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: all 0.4s ease;
+      text-shadow: 1px 1px #0d1b2a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .upload-btn:hover::before {
+      left: 100%;
+    }
+
+    .upload-btn:hover {
+      background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 
+        0 12px 35px rgba(152, 193, 217, 0.4),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    .preview-container {
+      margin: 25px 0;
+      position: relative;
+    }
+
+    #preview-image {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 15px;
+      border: 3px solid #415a77;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      animation: imageSlideIn 0.5s ease-out;
+    }
+
+    @keyframes imageSlideIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .submit-btn {
+      margin-top: 25px;
+      background: linear-gradient(145deg, #28a745, #155724);
+      color: #ffffff;
+      padding: 18px 35px;
+      border: none;
+      border-radius: 15px;
+      font-weight: bold;
+      font-size: 1.3rem;
+      cursor: pointer;
+      box-shadow: 
+        0 8px 25px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: all 0.4s ease;
+      text-shadow: 1px 1px #0d1b2a;
+      position: relative;
+      overflow: hidden;
+      animation: buttonAppear 0.5s ease-out;
+    }
+
+    @keyframes buttonAppear {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .submit-btn:hover::before {
+      left: 100%;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(145deg, #34ce57, #28a745);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 
+        0 12px 35px rgba(40, 167, 69, 0.5),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    /* Modal Styles */
+    .modal {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(26, 26, 46, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #1b263b, #162447);
+      padding: 50px 40px;
+      border-radius: 25px;
+      border: 3px solid #98c1d9;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      max-width: 500px;
+      width: 90%;
+      animation: modalSlideIn 0.5s ease-out;
+      position: relative;
+      overflow: hidden;
+    }
+
+    @keyframes modalSlideIn {
+      from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-content::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+      border-radius: 25px;
+      z-index: -1;
+      animation: modalGlow 3s linear infinite;
+    }
+
+    @keyframes modalGlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .modal-content h2 {
+      color: #ffffff;
+      font-size: 2rem;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #0d1b2a;
+    }
+
+    .modal-content p {
+      color: #ffffff;
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    .verification-details {
+      background: linear-gradient(135deg, rgba(31, 64, 104, 0.3), rgba(27, 38, 59, 0.3));
+      border-radius: 15px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: left;
+    }
+
+    .score-display {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    #confirm-btn {
+      background: linear-gradient(145deg, #3d5a80, #1f4068);
+      color: #ffffff;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 15px;
+      font-weight: bold;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 
+        0 8px 25px rgba(0,0,0,0.3),
+        inset 0 1px 0 rgba(255,255,255,0.1);
+      transition: all 0.4s ease;
+      text-shadow: 1px 1px #0d1b2a;
+    }
+
+    #confirm-btn:hover {
+      background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+      transform: translateY(-3px) scale(1.05);
+      box-shadow: 
+        0 12px 35px rgba(152, 193, 217, 0.4),
+        inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+
+    /* Success and Fail specific styles */
+    .success-modal h2 {
+      background: linear-gradient(45deg, #28a745, #34ce57);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .fail-modal h2 {
+      background: linear-gradient(45deg, #dc3545, #e74c3c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .quest-card {
+        padding: 30px 25px;
+        margin: 10px;
+      }
+      
+      .quest-card h2 {
+        font-size: 1.8rem;
+      }
+      
+      .detail-section {
+        padding: 15px;
+      }
+      
+      .upload-btn, .submit-btn {
+        padding: 15px 25px;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
 
 <div class="quest-wrapper">
   <div class="quest-card">
-    <h2>{{ quest.title }}</h2>
-    <p>{{ quest.description }}</p>
+    <div class="quest-header">
+      <h2>{{ quest.title }}</h2>
+      <div class="quest-subtitle">{{ quest.get('address', '서울특별시') }}</div>
+    </div>
+
+    <div class="quest-details">
+      {% if quest.mission %}
+      <div class="detail-section mission-section">
+        <div class="detail-label">
+          🎯 퀘스트 미션
+        </div>
+        <div class="detail-value">{{ quest.mission }}</div>
+      </div>
+      {% endif %}
+
+      {% if quest.description %}
+      <div class="detail-section">
+        <div class="detail-label">
+          📝 상세 설명
+        </div>
+        <div class="detail-value">{{ quest.description }}</div>
+      </div>
+      {% endif %}
+
+      {% if quest.photomission %}
+      <div class="detail-section photomission-section">
+        <div class="detail-label">
+          📸 포토 미션
+        </div>
+        <div class="detail-value">{{ quest.photomission }}</div>
+      </div>
+      {% endif %}
+
+      {% if quest.take_time %}
+      <div class="detail-section">
+        <div class="detail-label">
+          ⏱️ 예상 소요 시간
+        </div>
+        <div class="detail-value">{{ quest.take_time }}</div>
+      </div>
+      {% endif %}
+    </div>
 
     <form id="photo-form" action="/api/upload-photo" method="post" enctype="multipart/form-data">
       <input type="hidden" name="quest_id" value="{{ quest.id }}">
-      <label class="upload-btn">
-        📷 사진 선택
-        <input type="file" name="photo" id="photo-input" accept="image/*" hidden />
-      </label>
-      <img id="preview-image" style="max-width: 100%; margin-top: 1rem; display: none; border-radius: 10px;" />
-      <button type="submit" id="submit-btn" style="display: none;" class="submit-btn">📤 제출하기</button>
+      
+      <div class="upload-section">
+        <div class="upload-intro">
+          {% if quest.photomission %}
+          위 포토 미션을 완료한 사진을 업로드해주세요!
+          {% else %}
+          퀘스트 완료를 인증할 사진을 업로드해주세요!
+          {% endif %}
+        </div>
+        <label class="upload-btn">
+          📷 사진 선택하기
+          <input type="file" name="photo" id="photo-input" accept="image/*" hidden />
+        </label>
+      </div>
+      
+      <div class="preview-container">
+        <img id="preview-image" style="display: none;" />
+      </div>
+      
+      <div class="upload-section">
+        <button type="submit" id="submit-btn" style="display: none;" class="submit-btn">
+          ✨ 미션 완료하기
+        </button>
+      </div>
     </form>
   </div>
 </div>
@@ -21,81 +529,36 @@
 <div id="result-modal" class="modal" style="display: none;">
   <div class="modal-content">
     <h2 id="modal-title">퀘스트 결과</h2>
-    <p id="modal-message">퀘스트 결과 메시지입니다.</p>
+    <div id="modal-message">
+      <p id="modal-text">퀘스트 결과 메시지입니다.</p>
+      <div id="verification-details" class="verification-details" style="display: none;">
+        <div class="score-display" id="score-display"></div>
+        <p id="feedback-text"></p>
+      </div>
+    </div>
     <button id="confirm-btn">확인</button>
   </div>
 </div>
-
-<style>
-  .quest-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 85vh;
-    background-color: #f8f8f8;
-  }
-
-  .quest-card {
-    background-color: white;
-    padding: 2rem 3rem;
-    border-radius: 16px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-    text-align: center;
-    max-width: 400px;
-    width: 100%;
-  }
-
-  .upload-btn {
-    background-color: #ff8800;
-    color: white;
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-    display: inline-block;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
-  }
-
-  .submit-btn {
-    margin-top: 1rem;
-    background-color: #4caf50;
-    color: white;
-    padding: 10px 16px;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.2);
-  }
-
-  .modal {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-  }
-
-  .modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  }
-</style>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const photoInput = document.getElementById("photo-input");
     const previewImage = document.getElementById("preview-image");
     const submitBtn = document.getElementById("submit-btn");
-    const result = "{{ result | default('') }}";  // 문자열 그대로 받기
+    const result = "{{ result | default('') }}";
     const questId = {{ quest.id }};
+    const modalContent = document.querySelector(".modal-content");
+    
+    // Handle verification data safely
+    let verification = {};
+    try {
+      verification = {{ verification | tojson | safe if verification else '{}' }};
+    } catch (e) {
+      console.log("Verification data parsing failed:", e);
+    }
 
-    console.log("업로드 결과:", result);  // 디버깅용
+    console.log("업로드 결과:", result);
+    console.log("검증 정보:", verification);
 
     photoInput.addEventListener("change", () => {
       const file = photoInput.files[0];
@@ -111,12 +574,40 @@
     });
 
     if (result === "success") {
+      modalContent.classList.add("success-modal");
       document.getElementById("modal-title").innerText = "🎉 퀘스트 성공!";
-      document.getElementById("modal-message").innerText = "사진 인증에 성공했습니다!";
+      
+      let messageText = "사진 인증에 성공했습니다! 새로운 모험이 기다리고 있어요.";
+      if (verification && verification.feedback) {
+        messageText = verification.feedback;
+      }
+      document.getElementById("modal-text").innerText = messageText;
+      
+      // Show verification details if available
+      if (verification && verification.score) {
+        document.getElementById("verification-details").style.display = "block";
+        document.getElementById("score-display").innerHTML = `점수: <span style="color: #28a745;">${verification.score}/100</span>`;
+        document.getElementById("feedback-text").innerText = verification.feedback || "훌륭한 사진입니다!";
+      }
+      
       document.getElementById("result-modal").style.display = "flex";
     } else if (result === "fail") {
-      document.getElementById("modal-title").innerText = "😢 퀘스트 실패";
-      document.getElementById("modal-message").innerText = "요구 조건을 만족하지 못했습니다.";
+      modalContent.classList.add("fail-modal");
+      document.getElementById("modal-title").innerText = "😅 퀘스트 재도전";
+      
+      let messageText = "요구 조건을 만족하지 못했습니다. 다시 시도해보세요!";
+      if (verification && verification.feedback) {
+        messageText = verification.feedback;
+      }
+      document.getElementById("modal-text").innerText = messageText;
+      
+      // Show verification details if available
+      if (verification && verification.score) {
+        document.getElementById("verification-details").style.display = "block";
+        document.getElementById("score-display").innerHTML = `점수: <span style="color: #dc3545;">${verification.score}/100</span>`;
+        document.getElementById("feedback-text").innerText = verification.feedback || "포토 미션 요구사항을 다시 확인해보세요.";
+      }
+      
       document.getElementById("result-modal").style.display = "flex";
     }
 
@@ -134,9 +625,11 @@
         previewImage.src = "";
         submitBtn.style.display = "none";
         photoInput.value = "";
+        modalContent.classList.remove("fail-modal");
       }
     });
   });
 </script>
 
-{% endblock %}
+</body>
+</html>

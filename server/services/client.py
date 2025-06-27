@@ -79,6 +79,42 @@ def save_user(age, gender, location, travel_time):
             cursor.close()
             conn.close()
 
+def get_all_categories():
+    """Get all unique categories from route_table"""
+    conn = get_db_connection()
+    if conn is None:
+        # Return default categories if database connection fails
+        return ['액티비티', '자연', '산책', '야경', '문화', '맛집', '쇼핑', '역사', '예술', '카페']
+    
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT DISTINCT category FROM route_table WHERE category IS NOT NULL AND category != ''")
+        results = cursor.fetchall()
+        
+        # Split comma-separated categories and collect unique ones
+        categories = set()
+        for row in results:
+            if row[0]:
+                # Split by comma and strip whitespace
+                cat_list = [cat.strip() for cat in row[0].split(',') if cat.strip()]
+                categories.update(cat_list)
+        
+        # Add some additional hardcoded categories
+        additional_categories = ['문화', '맛집', '쇼핑', '역사', '예술', '카페', '체험', '휴식', '경치']
+        categories.update(additional_categories)
+        
+        # Convert to sorted list
+        return sorted(list(categories))
+    
+    except mysql.connector.Error as err:
+        print(f"Error fetching categories: {err}")
+        # Return default categories on error
+        return ['액티비티', '자연', '산책', '야경', '문화', '맛집', '쇼핑', '역사', '예술', '카페']
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 def get_routes_by_categories(categories: list):
     if not categories:
         return []
@@ -99,10 +135,12 @@ def get_routes_by_categories(categories: list):
         
         # This query joins the two tables and filters routes by the selected categories.
         # It orders the results to ensure course steps are sequential.
+        # Include total_estimated_time in the query
         query = f"""
             SELECT 
                 r.route_title,
                 r.set_id,
+                r.total_estimated_time,
                 s.course_id,
                 s.place_name
             FROM 
@@ -126,6 +164,7 @@ def get_routes_by_categories(categories: list):
                 routes[title] = {
                     'route_title': title,
                     'set_id': row['set_id'],
+                    'total_estimated_time': row['total_estimated_time'],
                     'courses': []
                 }
             routes[title]['courses'].append({
@@ -166,6 +205,24 @@ def get_set_by_id(set_id: int):
             cursor.close()
             conn.close()
 
+def get_max_quest_id():
+    """Get the maximum quest_id from the quests table"""
+    conn = get_db_connection()
+    if conn is None:
+        return 0
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT MAX(quest_id) FROM quests")
+        result = cursor.fetchone()
+        return result[0] if result[0] is not None else 0
+    except mysql.connector.Error as err:
+        print(f"Error fetching max quest_id: {err}")
+        return 0
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
 def create_quests(quests_data: list):
     if not quests_data:
         return
@@ -175,18 +232,31 @@ def create_quests(quests_data: list):
 
     try:
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM quests")
+        
+        # Get the next quest_id starting from max + 1
+        max_quest_id = get_max_quest_id()
+        next_quest_id = max_quest_id + 1
         
         query = """
             INSERT INTO quests (quest_id, mission, place_name, description, is_cleared, address, lat, lng)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """
-        values = [
-            (q.get('course_id'), q.get('mission'), q.get('place_name'), q.get('description'), 0, q.get('address'), q.get('lat'), q.get('lng'))
-            for q in quests_data
-        ]
+        values = []
+        for i, q in enumerate(quests_data):
+            values.append((
+                next_quest_id + i,  # Use incremental quest_id
+                q.get('mission'), 
+                q.get('place_name'), 
+                q.get('description'), 
+                0, 
+                q.get('address'), 
+                q.get('lat'), 
+                q.get('lng')
+            ))
+        
         cursor.executemany(query, values)
         conn.commit()
+        print(f"Created {len(values)} new quests starting from quest_id {next_quest_id}")
     except mysql.connector.Error as err:
         print(f"Error creating quests: {err}")
         conn.rollback()
@@ -200,14 +270,27 @@ def get_all_quests():
     if conn is None:
         # Return test data when database connection fails
         return [
-            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "lat": 37.579617, "lng": 126.977041},
-            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "lat": 37.580146, "lng": 126.976892},
-            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "lat": 37.5760, "lng": 126.9859}
+            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "is_cleared": 0, "lat": 37.579617, "lng": 126.977041},
+            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "is_cleared": 0, "lat": 37.580146, "lng": 126.976892},
+            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "is_cleared": 0, "lat": 37.5760, "lng": 126.9859}
         ]
     try:
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT quest_id as id, place_name as title, description, mission, lat, lng FROM quests ORDER BY quest_id"
-        cursor.execute(query)
+        
+        # Get the maximum quest_id first
+        cursor.execute("SELECT MAX(quest_id) FROM quests")
+        max_id_result = cursor.fetchone()
+        max_quest_id = max_id_result['MAX(quest_id)'] if max_id_result and max_id_result['MAX(quest_id)'] is not None else 0
+        
+        # Get the latest 3 quests (highest quest_ids) including is_cleared field
+        query = """
+            SELECT quest_id as id, place_name as title, description, mission, is_cleared, lat, lng 
+            FROM quests 
+            WHERE quest_id > %s - 3
+            ORDER BY quest_id DESC
+            LIMIT 3
+        """
+        cursor.execute(query, (max_quest_id,))
         result = cursor.fetchall()
         
         # Convert Decimal values to float
@@ -219,20 +302,110 @@ def get_all_quests():
         # Return test data if no data found in database
         if not result:
             return [
-                {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "lat": 37.579617, "lng": 126.977041},
-                {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "lat": 37.580146, "lng": 126.976892},
-                {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "lat": 37.5760, "lng": 126.9859}
+                {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "is_cleared": 0, "lat": 37.579617, "lng": 126.977041},
+                {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "is_cleared": 0, "lat": 37.580146, "lng": 126.976892},
+                {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "is_cleared": 0, "lat": 37.5760, "lng": 126.9859}
             ]
         
-        return result
+        # Reverse to show in ascending order (1, 2, 3 instead of 3, 2, 1)
+        return list(reversed(result))
     except mysql.connector.Error as err:
         print(f"Error fetching all quests: {err}")
         # Return test data when database query fails
         return [
-            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "lat": 37.579617, "lng": 126.977041},
-            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "lat": 37.580146, "lng": 126.976892},
-            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "lat": 37.5760, "lng": 126.9859}
+            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "is_cleared": 0, "lat": 37.579617, "lng": 126.977041},
+            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "is_cleared": 0, "lat": 37.580146, "lng": 126.976892},
+            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "is_cleared": 0, "lat": 37.5760, "lng": 126.9859}
         ]
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+
+def get_quest_by_id(quest_id: int):
+    """Get detailed quest information by quest_id including photomission from set_table"""
+    conn = get_db_connection()
+    if conn is None:
+        # Return test data when database connection fails
+        return {
+            "id": quest_id,
+            "title": "경복궁 방문",
+            "description": "경복궁에서 사진찍기",
+            "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!",
+            "photomission": "궁궐의 웅장한 전각을 배경으로 한 인증샷을 촬영해주세요. 전통 건축의 아름다움과 함께 당신의 모습을 담아보세요!",
+            "is_cleared": 0,
+            "lat": 37.579617,
+            "lng": 126.977041,
+            "address": "서울특별시 종로구 사직로 161",
+            "place_name": "경복궁"
+        }
+    
+    try:
+        cursor = conn.cursor(dictionary=True)
+        
+        # First try to get from quests table
+        quest_query = """
+            SELECT quest_id as id, place_name as title, description, mission, is_cleared, lat, lng, address
+            FROM quests 
+            WHERE quest_id = %s
+        """
+        cursor.execute(quest_query, (quest_id,))
+        quest_result = cursor.fetchone()
+        
+        if quest_result:
+            # Convert Decimal values to float
+            for key, value in quest_result.items():
+                if isinstance(value, Decimal):
+                    quest_result[key] = float(value)
+            
+            # Try to get additional photomission data from set_table if available
+            set_query = """
+                SELECT photomission, take_time, signgu
+                FROM set_table 
+                WHERE place_name = %s
+                LIMIT 1
+            """
+            cursor.execute(set_query, (quest_result['title'],))
+            set_result = cursor.fetchone()
+            
+            if set_result and set_result['photomission']:
+                quest_result['photomission'] = set_result['photomission']
+                quest_result['take_time'] = set_result['take_time']
+                quest_result['signgu'] = set_result['signgu']
+            else:
+                # Generate dynamic photomission based on place name
+                quest_result['photomission'] = f"{quest_result['title']}에서 특별한 순간을 담아보세요! 이곳만의 독특한 분위기와 함께 멋진 인증샷을 촬영해주세요."
+            
+            return quest_result
+        else:
+            # Fallback test data
+            return {
+                "id": quest_id,
+                "title": f"퀘스트 {quest_id}",
+                "description": "특별한 모험이 당신을 기다리고 있습니다.",
+                "mission": "이 장소에서 멋진 퀘스트를 수행해보세요!",
+                "photomission": "이곳의 특별한 분위기를 담은 인증샷을 촬영해주세요. 당신만의 독특한 시각으로 이 순간을 기록해보세요!",
+                "is_cleared": 0,
+                "lat": 37.579617,
+                "lng": 126.977041,
+                "address": "서울특별시",
+                "place_name": f"퀘스트 장소 {quest_id}"
+            }
+            
+    except mysql.connector.Error as err:
+        print(f"Error fetching quest by id: {err}")
+        return {
+            "id": quest_id,
+            "title": f"퀘스트 {quest_id}",
+            "description": "특별한 모험이 당신을 기다리고 있습니다.",
+            "mission": "이 장소에서 멋진 퀘스트를 수행해보세요!",
+            "photomission": "이곳의 특별한 분위기를 담은 인증샷을 촬영해주세요. 당신만의 독특한 시각으로 이 순간을 기록해보세요!",
+            "is_cleared": 0,
+            "lat": 37.579617,
+            "lng": 126.977041,
+            "address": "서울특별시",
+            "place_name": f"퀘스트 장소 {quest_id}"
+        }
     finally:
         if conn.is_connected():
             cursor.close()
