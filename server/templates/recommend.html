@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추천 퀘스트</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'DotGothic16', sans-serif;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #e0fbfc;
+            text-shadow: 2px 2px #0d1b2a;
+            font-size: 2.5rem;
+        }
+
+        .direct-input-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #1f4068;
+            color: #e0fbfc;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 2px solid #415a77;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .direct-input-button:hover {
+            background-color: #3d5a80;
+            border-color: #98c1d9;
+        }
+
+        .route-card-link {
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            border-radius: 12px; /* Match card rounding */
+            transition: all 0.3s ease;
+        }
+        
+        .route-card-link:hover .route-card {
+            border-color: #98c1d9;
+            box-shadow: 0 0 15px rgba(152, 193, 217, 0.5);
+        }
+
+        .route-list-container {
+            max-width: 900px;
+            margin: 0 auto;
+            height: 70vh;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #162447;
+            border: 5px solid #1f4068;
+            border-radius: 15px;
+        }
+
+        .route-card {
+            background-color: #1b263b;
+            border: 2px solid #415a77;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .route-title {
+            color: #e0fbfc;
+            font-size: 1.8rem;
+            margin: 0 0 20px 0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #1f4068;
+        }
+
+        .course-container {
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .course-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 25px;
+            flex-shrink: 0;
+        }
+
+        .course-circle {
+            width: 100px;
+            height: 100px;
+            background-color: #3d5a80;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10px;
+            font-size: 1rem;
+            border: 3px solid #415a77;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .course-circle:hover {
+            border-color: #98c1d9;
+            background-color: #4a6fa5;
+            transform: scale(1.05);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            font-family: 'Noto Sans KR', sans-serif; /* Modal uses a more readable font */
+            background-color: #1b263b;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #98c1d9;
+            width: 80%;
+            max-width: 500px;
+            color: #e0e0e0;
+            position: relative;
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            color: #98c1d9;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>추천 루트</h1>
+        <a href="/api/custom" class="direct-input-button">✨ 직접 원하는 장소 입력하기</a>
+    </div>
+
+    <div class="route-list-container">
+        {% if routes %}
+            {% for route in routes %}
+            <a href="/api/custom?set_id={{ route.set_id }}" class="route-card-link">
+                <div class="route-card">
+                    <h2 class="route-title">{{ route.route_title }}</h2>
+                    <div class="course-container">
+                        {% for course in route.courses %}
+                        <div class="course-item">
+                            <div class="course-circle" data-routetitle="{{ route.route_title }}" data-placename="{{ course.place_name }}">
+                                {{ course.place_name }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <p style="text-align: center; font-size: 1.2rem;">추천할만한 루트를 찾지 못했어요. 다른 테마를 선택해보세요!</p>
+        {% endif %}
+    </div>
+
+    <!-- Quest Detail Modal -->
+    <div id="questModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <p id="modalPlace"></p>
+            <p>이 장소에서 멋진 퀘스트를 수행해보세요!</p>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('questModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalPlace = document.getElementById('modalPlace');
+
+        document.querySelectorAll('.course-circle').forEach(circle => {
+            circle.addEventListener('click', function(event) {
+                event.preventDefault(); // Stop the link from navigating
+                event.stopPropagation(); // Stop the event from bubbling up to the link
+                const routeTitle = this.dataset.routetitle;
+                const placeName = this.dataset.placename;
+                openModal(routeTitle, placeName);
+            });
+        });
+
+        function openModal(routeTitle, placeName) {
+            modalTitle.textContent = routeTitle;
+            modalPlace.textContent = `장소: ${placeName}`;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        // Close modal if user clicks outside of the modal content
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Start</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'DotGothic16', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 800px;
+            height: 600px;
+            background-color: #162447;
+            border: 5px solid #1f4068;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(22, 36, 71, 0.8);
+            display: flex;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .left-panel, .right-panel {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .left-panel {
+            border-right: 3px solid #1f4068;
+        }
+
+        .status-box, .action-box, .edit-form {
+            background-color: #1b263b;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #415a77;
+        }
+        
+        h1, h2 {
+            color: #e0fbfc;
+            text-shadow: 2px 2px #0d1b2a;
+        }
+
+        .status-item {
+            font-size: 1.2rem;
+            margin: 15px 0;
+        }
+
+        .status-item span {
+            color: #98c1d9;
+            font-weight: bold;
+        }
+
+        .action-box p {
+            font-size: 1.3rem;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .action-button {
+            display: block;
+            width: 80%;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: #3d5a80;
+            color: #e0fbfc;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 8px;
+            border: 2px solid #98c1d9;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-button:hover {
+            background-color: #98c1d9;
+            color: #1b263b;
+            box-shadow: 0 0 15px #98c1d9;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+            color: #98c1d9;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px solid #415a77;
+            background-color: #1b263b;
+            color: #e0e0e0;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1rem;
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+        }
+
+        .radio-group input[type="radio"] {
+            display: none;
+        }
+
+        .radio-group label {
+            cursor: pointer;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: 2px solid #415a77;
+            background-color: #1b263b;
+            color: #e0e0e0;
+            width: 80px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .radio-group input[type="radio"]:checked + label {
+            background-color: #98c1d9;
+            color: #1b263b;
+            border-color: #e0fbfc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        {% if user %}
+        <div class="left-panel">
+            <div class="status-box" id="userInfo">
+                <h2>플레이어 정보</h2>
+                <div class="status-item"><span>나이:</span> {{ user.age }}</div>
+                <div class="status-item"><span>성별:</span> {{ user.gender }}</div>
+                <div class="status-item"><span>여행 지역:</span> {{ user.location }}</div>
+                <div class="status-item"><span>코스 시간:</span> {{ user.travel_time }} 시간</div>
+                <button class="action-button" id="editButton" style="margin-top: 20px;">수정</button>
+            </div>
+            <div class="edit-form" id="editForm" style="display: none;">
+                <form action="/create-user" method="post">
+                    <div class="input-group">
+                        <label for="age">나이:</label>
+                        <input type="number" id="age" name="age" value="{{ user.age }}" required>
+                    </div>
+                    <div class="input-group">
+                        <label>성별:</label>
+                        <div class="radio-group">
+                            <input type="radio" id="male_edit" name="gender" value="남성" {% if user.gender == '남성' %}checked{% endif %} required>
+                            <label for="male_edit">남성</label>
+                            <input type="radio" id="female_edit" name="gender" value="여성" {% if user.gender == '여성' %}checked{% endif %}>
+                            <label for="female_edit">여성</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">여행 지역:</label>
+                        <select id="location" name="location" required>
+                            {% for sigungu in sigungu_list %}
+                            <option value="{{ sigungu }}" {% if sigungu == user.location %}selected{% endif %}>{{ sigungu }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="travel_time">코스 시간 (시간):</label>
+                        <input type="number" id="travel_time" name="travel_time" value="{{ user.travel_time }}" required>
+                    </div>
+                    <button type="submit" class="action-button">수정 완료</button>
+                </form>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="action-box">
+                <p>이대로 퀘스트를 진행하시겠습니까?</p>
+                <a href="/category" class="action-button">테마 찾으러 가기</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="left-panel">
+            <h2>새로운 모험가</h2>
+            <p>프로필을 작성하여<br>퀘스트를 시작하세요.</p>
+        </div>
+        <div class="right-panel">
+            <form action="/create-user" method="post">
+                <div class="input-group">
+                    <label for="age">나이:</label>
+                    <input type="number" id="age" name="age" required>
+                </div>
+                <div class="input-group">
+                    <label>성별:</label>
+                    <div class="radio-group">
+                        <input type="radio" id="male" name="gender" value="남성" required>
+                        <label for="male">남성</label>
+                        <input type="radio" id="female" name="gender" value="여성">
+                        <label for="female">여성</label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="location">여행 지역:</label>
+                    <select id="location" name="location" required>
+                        <option value="" disabled selected>-- 지역 선택 --</option>
+                        {% for sigungu in sigungu_list %}
+                        <option value="{{ sigungu }}">{{ sigungu }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="travel_time">코스 시간 (시간):</label>
+                    <input type="number" id="travel_time" name="travel_time" required>
+                </div>
+                <button type="submit" class="action-button">모험 시작하기</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if user %}
+    <script>
+        document.getElementById('editButton').addEventListener('click', () => {
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('editForm').style.display = 'block';
+        });
+    </script>
+    {% endif %}
+</body>
+</html> 

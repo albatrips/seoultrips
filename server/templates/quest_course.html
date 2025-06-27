@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% block body_attrs %}data-redirect-url="/"{% endblock %}
+
+<div class="quest-course-container">
+  <aside class="quest-list">
+    <h3>코스 {{ theme }}</h3>
+    <div class="quest-card-list">
+      {% for step in steps %}
+      <div class="quest-card-ui" data-index="{{ loop.index0 }}" data-id="{{ step.id }}" data-title="{{ step.title }}">
+        <div class="circle-number">{{ loop.index }}</div>
+        <div class="card-info">
+          <div class="title">{{ step.title }}</div>
+          <div class="coords">📍 {{ step.lat }}, {{ step.lng }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="refresh-button" onclick="location.reload()">🔄 새로고침</button>
+  </aside>
+
+  <section id="map" class="map-placeholder"></section>
+</div>
+
+<!-- ✅ 모달 -->
+<div id="quest-modal" class="modal">
+  <div class="modal-content">
+    <p id="modal-text" class="modal-text">이 퀘스트를 진행하시겠습니까?</p>
+    <div class="modal-buttons">
+      <button id="confirm-btn" class="confirm-btn">✅ 진행</button>
+      <button id="cancel-btn" class="cancel-btn">❌ 취소</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.4);
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+  }
+
+  .modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem 2.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    text-align: center;
+    max-width: 320px;
+    width: 100%;
+  }
+
+  .modal-text {
+    font-size: 1.15rem;
+    font-weight: bold;
+    margin-bottom: 1.5rem;
+  }
+
+  .modal-buttons {
+    display: flex;
+    justify-content: space-around;
+  }
+
+  .confirm-btn, .cancel-btn {
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .confirm-btn {
+    background: #ff8800;
+    color: white;
+  }
+
+  .confirm-btn:hover {
+    background: #e67800;
+  }
+
+  .cancel-btn {
+    background: #ccc;
+  }
+
+  .cancel-btn:hover {
+    background: #bbb;
+  }
+
+  .quest-card-ui.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+</style>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const map = new naver.maps.Map('map', {
+      center: new naver.maps.LatLng(37.579617, 126.977041),
+      zoom: 14
+    });
+
+    const steps = {{ steps | tojson | safe }};
+    const markers = [];
+    let selectedQuestId = null;
+
+    const completedQuests = JSON.parse(localStorage.getItem("completedQuests") || "[]");
+
+    steps.forEach(function(step, index) {
+      if (step.lat && step.lng) {
+        const position = new naver.maps.LatLng(step.lat, step.lng);
+
+        const marker = new naver.maps.Marker({
+          position: position,
+          map: map,
+          title: step.title
+        });
+
+        const infoWindow = new naver.maps.InfoWindow({
+          content: `
+            <div style="
+              background: white;
+              border: 2px solid #ff8800;
+              border-radius: 8px;
+              padding: 8px 12px;
+              font-weight: bold;
+              box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+            ">
+              📍 ${step.title}
+            </div>`,
+          backgroundColor: "transparent",
+          borderColor: "transparent",
+          disableAnchor: true
+        });
+
+        markers.push({ marker, infoWindow, position });
+      }
+    });
+
+    const cards = document.querySelectorAll(".quest-card-ui");
+    const modal = document.getElementById("quest-modal");
+    const confirmBtn = document.getElementById("confirm-btn");
+    const cancelBtn = document.getElementById("cancel-btn");
+    const modalText = document.getElementById("modal-text");
+
+    cards.forEach((card, index) => {
+      const { marker, infoWindow, position } = markers[index];
+      const questId = parseInt(card.dataset.id);
+      const questTitle = card.dataset.title;
+
+      if (completedQuests.includes(questId)) {
+        card.classList.add("disabled");
+        return;
+      }
+
+      card.addEventListener("mouseover", () => {
+        map.setZoom(17);
+        map.panTo(position);
+        infoWindow.open(map, marker);
+      });
+
+      card.addEventListener("mouseout", () => {
+        infoWindow.close();
+      });
+
+      card.addEventListener("click", () => {
+        selectedQuestId = questId;
+        modalText.textContent = `‘${questTitle}’ 퀘스트를 진행하시겠습니까?`;
+        modal.style.display = "flex";
+      });
+    });
+
+    confirmBtn.addEventListener("click", () => {
+      if (selectedQuestId) {
+        window.location.href = `quest/${selectedQuestId}`;
+      }
+    });
+
+    cancelBtn.addEventListener("click", () => {
+      modal.style.display = "none";
+      selectedQuestId = null;
+    });
+  });
+
+  // 새로고침 시 이전 페이지로 리다이렉트
+  window.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    const fromRecommend = params.get("from_recommend");
+
+    if (fromRecommend === "1") {
+      const redirectTo = document.body.dataset.redirectUrl || "/";
+      if (sessionStorage.getItem("redirectedFromRecommend")) {
+        sessionStorage.removeItem("redirectedFromRecommend");
+        window.location.href = redirectTo;
+      } else {
+        sessionStorage.setItem("redirectedFromRecommend", "true");
+      }
+    }
+  });
+</script>
+
+{% endblock %}

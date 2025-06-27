@@ -1,0 +1,54 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+}
+header {
+  background: #0077cc;
+  color: white;
+  padding: 10px;
+}
+.categories {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: cneter;
+  margin-top: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.category {
+  border: 1px solid #ccc;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  background-color: #f4f4f4;
+}
+
+.category:hover {
+  background-color: #d9ecff;
+}
+
+.quest-course-container {
+  display: flex;
+  height: 80vh;
+}
+.quest-list {
+  width: 30%;
+  background: #f9f9f9;
+  padding: 10px;
+  overflow-y: auto;
+}
+.quest-card {
+  padding: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+.map-placeholder {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border-left: 1px solid #ddd;
+}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+    <h2>Select a Theme</h2>
+    <form action="/api/recommend" method="post">
+        <select name="theme">
+            {% for t in themes %}
+                <option value="{{ t }}">{{ t }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit">Start Quest</button>
+    </form>
+{% endblock %}

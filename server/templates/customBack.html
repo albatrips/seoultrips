@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커스텀 퀘스트</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'DotGothic16', sans-serif;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            position: relative;
+        }
+
+        /* 퀘스트 입력 섹션 */
+        .quest-search-section {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #162447;
+            border-radius: 10px;
+            border: 2px solid #415a77;
+        }
+
+        .submitButtonUser {
+            padding: 15px 25px;
+            background-color: #415a77;
+            color: #e0fbfc;
+            border: 2px solid #98c1d9;
+            border-radius: 5px;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .submitButtonUser:hover {
+            background-color: #3d5a80;
+            box-shadow: 0 0 10px rgba(152, 193, 217, 0.5);
+        }
+
+        .quest-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 2px solid #415a77;
+            background-color: #1b263b;
+            color: #e0e0e0;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .quest-input:focus {
+            outline: none;
+            border-color: #98c1d9;
+            box-shadow: 0 0 10px rgba(152, 193, 217, 0.3);
+        }
+
+        .quest-search-button {
+            padding: 15px 25px;
+            background-color: #415a77;
+            color: #e0fbfc;
+            border: 2px solid #98c1d9;
+            border-radius: 5px;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .quest-search-button:hover {
+            background-color: #3d5a80;
+            box-shadow: 0 0 10px rgba(152, 193, 217, 0.5);
+        }
+
+        /* 퀘스트 생성 폼 섹션 */
+        .quest-create-section {
+            margin-bottom: 100px;
+        }
+
+        .cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .mission-card {
+            background-color: #1b263b;
+            border: 2px solid #415a77;
+            border-radius: 10px;
+            padding: 20px;
+            width: 30%;
+            min-width: 300px;
+            height: 350px;
+        }
+
+        .mission-card h3 {
+            color: #e0fbfc;
+            text-shadow: 1px 1px #0d1b2a;
+            font-size: 1.5rem;
+            margin: 0 0 15px 0;
+            border-bottom: 1px solid #415a77;
+            padding-bottom: 10px;
+        }
+
+        .mission-card p {
+            margin: 12px 0;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        .mission-card span {
+            color: #98c1d9;
+            font-weight: bold;
+        }
+
+        .mission-card input, .mission-card textarea {
+            width: 95%;
+            background: #162447;
+            border: 1px solid #415a77;
+            color: #e0e0e0;
+            padding: 8px;
+            margin-top: 4px;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 0.9rem;
+            border-radius: 3px;
+        }
+
+        .mission-card textarea {
+            height: 60px;
+            resize: vertical;
+        }
+
+        .mission-title-input {
+            font-size: 1.5rem;
+            margin: 0 0 15px 0;
+            border-bottom: 1px solid #415a77;
+            padding: 0 0 10px 0;
+            color: #e0fbfc;
+            width: 100%;
+        }
+
+        /* 퀘스트 시작 버튼 */
+        .start-quest-button {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            padding: 15px 30px;
+            background-color: #3d5a80;
+            color: #e0fbfc;
+            text-decoration: none;
+            border: 2px solid #98c1d9;
+            border-radius: 8px;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1.4rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .start-quest-button:hover {
+            background-color: #98c1d9;
+            color: #1b263b;
+            box-shadow: 0 0 15px #98c1d9;
+        }
+
+        /* 로딩 팝업 스타일 */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-popup {
+            background-color: #1b263b;
+            border: 2px solid #98c1d9;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(152, 193, 217, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #415a77;
+            border-top: 4px solid #98c1d9;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading-text {
+            color: #e0fbfc;
+            font-size: 1.5rem;
+            font-family: 'DotGothic16', sans-serif;
+            margin: 0;
+        }
+
+        .loading-subtext {
+            color: #98c1d9;
+            font-size: 1rem;
+            font-family: 'DotGothic16', sans-serif;
+            margin: 10px 0 0 0;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* 결과 표시 스타일 */
+        .result-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #162447;
+            border: 2px solid #98c1d9;
+            border-radius: 10px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .result-title {
+            color: #e0fbfc;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .result-content {
+            color: #e0e0e0;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="input-area">
+            <form class="quest-search-form" id="questSearchForm">
+                <input type="text" name="quest_input" class="custom-input" placeholder="원하는 퀘스트를 직접 입력해보세요..." required>
+                <button type="submit" class="submitButtonUser">전송</button>
+            </form>
+
+            <!-- 결과 표시 섹션 -->
+            <div class="result-section" id="resultSection">
+                <h3 class="result-title">생성된 퀘스트</h3>
+                <div class="result-content" id="resultContent">
+                    <!-- 결과가 여기에 표시됩니다 -->
+                </div>
+            </div>
+        </div>
+
+        <form id="questForm" action="/api/start-quest" method="post">
+            <div class="cards-container">
+                {% if set_details %}
+                    <!-- Scenario A: Display pre-loaded data statically -->
+                    {% for course in set_details %}
+                    <div class="mission-card">
+                        <h3>{{ course.mission or '미션' }}</h3>
+                        <div>
+                            <p><span>장소:</span> {{ course.place_name or '미지정' }}</p>
+                            <p><span>설명:</span> {{ course.description or '설명 없음' }}</p>
+                            <p><span>주소:</span> {{ course.sigungu or '미지정' }}</p>
+                        </div>
+                        <!-- Hidden fields for form submission -->
+                        <input type="hidden" name="course_id_{{ loop.index0 }}" value="{{ course.course_id or '' }}">
+                        <input type="hidden" name="mission_{{ loop.index0 }}" value="{{ course.mission or '' }}">
+                        <input type="hidden" name="place_name_{{ loop.index0 }}" value="{{ course.place_name or '' }}">
+                        <input type="hidden" name="description_{{ loop.index0 }}" value="{{ course.description or '' }}">
+                        <input type="hidden" name="address_{{ loop.index0 }}" value="{{ course.sigungu or '' }}">
+                        <input type="hidden" name="lat_{{ loop.index0 }}" value="{{ course.lat or '' }}">
+                        <input type="hidden" name="lng_{{ loop.index0 }}" value="{{ course.lng or '' }}">
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Scenario B: Display editable fields for creating a new quest -->
+                    {% for i in range(3) %}
+                    <div class="mission-card">
+                        <input type="text" name="mission_{{ i }}" class="mission-title-input" placeholder="미션 {{ i + 1 }} 제목">
+                        <div>
+                            <p><span>장소:</span> <input type="text" name="place_name_{{ i }}" placeholder="장소 이름"></p>
+                            <p><span>설명:</span> <textarea name="description_{{ i }}" placeholder="퀘스트 설명"></textarea></p>
+                            <p><span>주소:</span> <input type="text" name="address_{{ i }}" placeholder="주소"></p>
+                        </div>
+                        <input type="hidden" name="course_id_{{ i }}" value="{{ i + 1 }}">
+                        <input type="hidden" name="lat_{{ i }}" value="0.0">
+                        <input type="hidden" name="lng_{{ i }}" value="0.0">
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <button type="submit" id="submitButton" class="start-quest-button">퀘스트 시작하기</button>
+        </form>
+    </div>
+
+    <!-- 로딩 팝업 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-popup">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">퀘스트 생성 중...</p>
+            <p class="loading-subtext">잠시만 기다려주세요</p>
+        </div>
+    </div>
+
+    <script>
+        // 퀘스트 검색 폼 AJAX 처리
+        document.getElementById('questSearchForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const questInput = document.querySelector('input[name="quest_input"]').value.trim();
+            if (!questInput) {
+                alert('퀘스트를 입력해주세요!');
+                return;
+            }
+
+            // 로딩 팝업 표시
+            showLoading();
+
+            // AJAX 요청
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    quest_input: questInput
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 로딩 팝업 숨기기
+                hideLoading();
+
+                // 결과 표시
+                displayResult(data);
+            })
+            .catch(error => {
+                // 로딩 팝업 숨기기
+                hideLoading();
+
+                // 에러 처리 (샘플용 데이터 표시)
+                console.error('Error:', error);
+                displaySampleResult(questInput);
+            });
+        });
+
+        // 로딩 팝업 표시
+        function showLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
+        }
+
+        // 로딩 팝업 숨기기
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'none';
+        }
+
+        // 결과 표시
+        function displayResult(data) {
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+
+            let html = '';
+            if (data.quests && data.quests.length > 0) {
+                data.quests.forEach((quest, index) => {
+                    html += `
+                        <div style="margin-bottom: 20px; padding: 15px; background-color: #1b263b; border-radius: 8px; border: 1px solid #415a77;">
+                            <h4 style="color: #98c1d9; margin: 0 0 10px 0;">퀘스트 ${index + 1}: ${quest.title}</h4>
+                            <p style="margin: 5px 0;"><span style="color: #98c1d9;">장소:</span> ${quest.location}</p>
+                            <p style="margin: 5px 0;"><span style="color: #98c1d9;">설명:</span> ${quest.description}</p>
+                            <p style="margin: 5px 0;"><span style="color: #98c1d9;">주소:</span> ${quest.address}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                html = '<p>결과를 불러올 수 없습니다.</p>';
+            }
+
+            resultContent.innerHTML = html;
+            resultSection.style.display = 'block';
+        }
+
+        // 샘플 결과 표시 (백엔드 연결 전 테스트용)
+        function displaySampleResult(questInput) {
+            const sampleData = {
+                quests: [
+                    {
+                        title: `${questInput} 관련 퀘스트 1`,
+                        location: "강남역 근처",
+                        description: `${questInput}에 관련된 첫 번째 미션입니다. 지정된 장소에서 특별한 경험을 해보세요.`,
+                        address: "서울시 강남구 강남대로 123"
+                    },
+                    {
+                        title: `${questInput} 관련 퀘스트 2`,
+                        location: "홍대입구역 근처",
+                        description: `${questInput}와 연관된 두 번째 도전 과제입니다. 창의적인 활동이 포함되어 있습니다.`,
+                        address: "서울시 마포구 홍익로 456"
+                    },
+                    {
+                        title: `${questInput} 관련 퀘스트 3`,
+                        location: "명동역 근처",
+                        description: `${questInput}의 마지막 단계입니다. 모든 퀘스트를 완료하면 특별한 보상이 기다립니다.`,
+                        address: "서울시 중구 명동길 789"
+                    }
+                ]
+            };
+
+            displayResult(sampleData);
+        }
+
+        // 퀘스트 생성 폼 유효성 검사
+        document.getElementById('questForm').addEventListener('submit', function(event) {
+            const missionInputs = document.querySelectorAll('input[name^="mission_"]');
+            let hasAtLeastOneMission = false;
+
+            missionInputs.forEach(input => {
+                if (input.value.trim() !== '') {
+                    hasAtLeastOneMission = true;
+                }
+            });
+
+            if (!hasAtLeastOneMission) {
+                event.preventDefault();
+                alert('적어도 하나의 퀘스트는 입력해야 시작할 수 있습니다.');
+            }
+        });
+
+        // Enter 키 이벤트 처리
+        document.querySelector('.custom-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('questSearchForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>
