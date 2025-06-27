@@ -3,150 +3,441 @@
 
 {% block body_attrs %}data-redirect-url="/"{% endblock %}
 
-<div class="quest-course-container">
-  <aside class="quest-list">
-    <h3>코스 {{ theme }}</h3>
-    <div class="quest-card-list">
-      {% for step in steps %}
-      <div class="quest-card-ui" data-index="{{ loop.index0 }}" data-id="{{ step.id }}" data-title="{{ step.title }}">
-        <div class="circle-number">{{ loop.index }}</div>
-        <div class="card-info">
-          <div class="title">{{ step.title }}</div>
-          <div class="coords">📍 {{ step.lat }}, {{ step.lng }}</div>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    <button class="refresh-button" onclick="location.reload()">🔄 새로고침</button>
-  </aside>
-
-  <section id="map" class="map-placeholder"></section>
-</div>
-
-<!-- ✅ 모달 -->
-<div id="quest-modal" class="modal">
-  <div class="modal-content">
-    <p id="modal-text" class="modal-text">이 퀘스트를 진행하시겠습니까?</p>
-    <div class="modal-buttons">
-      <button id="confirm-btn" class="confirm-btn">✅ 진행</button>
-      <button id="cancel-btn" class="cancel-btn">❌ 취소</button>
-    </div>
-  </div>
-</div>
-
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+  body {
+    background-color: #1a1a2e !important;
+    color: #e0e0e0 !important;
+    font-family: 'DotGothic16', sans-serif !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  .quest-course-container {
+    display: flex;
+    height: 100vh;
+    background-color: #1a1a2e;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .quest-list {
+    width: 35%;
+    background-color: #162447;
+    border: 5px solid #1f4068;
+    border-radius: 15px;
+    padding: 25px;
+    overflow-y: auto;
+    box-shadow: 0 0 20px rgba(31, 64, 104, 0.5);
+  }
+
+  .quest-list h3 {
+    color: #e0fbfc;
+    font-size: 2rem;
+    margin: 0 0 30px 0;
+    text-align: center;
+    text-shadow: 2px 2px #0d1b2a;
+    border-bottom: 3px solid #1f4068;
+    padding-bottom: 15px;
+  }
+
+  .quest-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .quest-card-ui {
+    background-color: #1b263b;
+    border: 3px solid #415a77;
+    border-radius: 15px;
+    padding: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .quest-card-ui:before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+    border-radius: 15px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .quest-card-ui:hover {
+    transform: translateY(-5px) scale(1.02);
+    border-color: #98c1d9;
+    box-shadow: 0 10px 25px rgba(152, 193, 217, 0.3);
+  }
+
+  .quest-card-ui:hover:before {
+    opacity: 1;
+  }
+
+  .quest-number {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3d5a80, #1f4068);
+    border: 2px solid #98c1d9;
+    color: #e0fbfc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    text-shadow: 1px 1px #0d1b2a;
+  }
+
+  .quest-content {
+    margin-right: 60px;
+  }
+
+  .quest-title {
+    color: #e0fbfc;
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin: 0 0 15px 0;
+    text-shadow: 1px 1px #0d1b2a;
+  }
+
+  .quest-mission {
+    color: #98c1d9;
+    font-size: 1rem;
+    margin: 10px 0;
+    padding: 12px;
+    background-color: #0d1b2a;
+    border-radius: 8px;
+    border-left: 4px solid #3d5a80;
+    font-style: italic;
+  }
+
+  .quest-description {
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    margin: 10px 0;
+    opacity: 0.8;
+  }
+
+  .quest-coords {
+    color: #415a77;
+    font-size: 0.8rem;
+    margin-top: 10px;
+  }
+
+  .quest-card-ui.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(50%);
+  }
+
+  .quest-card-ui.completed {
+    border-color: #28a745;
+    background-color: #1a2e1a;
+  }
+
+  .quest-card-ui.completed .quest-number {
+    background: linear-gradient(135deg, #28a745, #155724);
+    border-color: #28a745;
+  }
+
+  .map-container {
+    width: 65%;
+    background-color: #162447;
+    border: 5px solid #1f4068;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(31, 64, 104, 0.5);
+    position: relative;
+  }
+
+  #map {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .refresh-button {
+    margin-top: 25px;
+    background: linear-gradient(135deg, #3d5a80, #1f4068);
+    color: #e0fbfc;
+    border: 2px solid #415a77;
+    padding: 15px 25px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s ease;
+    text-shadow: 1px 1px #0d1b2a;
+  }
+
+  .refresh-button:hover {
+    background: linear-gradient(135deg, #4a6fa5, #3d5a80);
+    border-color: #98c1d9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(152, 193, 217, 0.3);
+  }
+
+  /* Modal Styles */
   .modal {
     display: none;
     position: fixed;
     top: 0; left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0,0,0,0.4);
+    background: rgba(13, 27, 42, 0.8);
     justify-content: center;
     align-items: center;
     z-index: 9999;
   }
 
   .modal-content {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem 2.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    background: linear-gradient(135deg, #1b263b, #162447);
+    border: 3px solid #98c1d9;
+    border-radius: 15px;
+    padding: 2.5rem 3rem;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
     text-align: center;
-    max-width: 320px;
-    width: 100%;
+    max-width: 400px;
+    width: 90%;
+    position: relative;
+  }
+
+  .modal-content:before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+    border-radius: 15px;
+    z-index: -1;
+    animation: borderGlow 2s linear infinite;
+  }
+
+  @keyframes borderGlow {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 
   .modal-text {
-    font-size: 1.15rem;
+    color: #e0fbfc;
+    font-size: 1.3rem;
     font-weight: bold;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
+    text-shadow: 1px 1px #0d1b2a;
   }
 
   .modal-buttons {
     display: flex;
     justify-content: space-around;
+    gap: 20px;
   }
 
   .confirm-btn, .cancel-btn {
-    padding: 10px 20px;
-    font-size: 0.95rem;
-    border-radius: 8px;
-    border: none;
+    padding: 12px 25px;
+    font-size: 1rem;
+    border-radius: 10px;
+    border: 2px solid;
     cursor: pointer;
     font-weight: bold;
+    transition: all 0.3s ease;
+    flex: 1;
   }
 
   .confirm-btn {
-    background: #ff8800;
-    color: white;
+    background: linear-gradient(135deg, #3d5a80, #1f4068);
+    color: #e0fbfc;
+    border-color: #98c1d9;
   }
 
   .confirm-btn:hover {
-    background: #e67800;
+    background: linear-gradient(135deg, #4a6fa5, #3d5a80);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(152, 193, 217, 0.3);
   }
 
   .cancel-btn {
-    background: #ccc;
+    background: linear-gradient(135deg, #415a77, #162447);
+    color: #e0e0e0;
+    border-color: #415a77;
   }
 
   .cancel-btn:hover {
-    background: #bbb;
-  }
-
-  .quest-card-ui.disabled {
-    opacity: 0.5;
-    pointer-events: none;
+    background: linear-gradient(135deg, #5a7a9a, #415a77);
+    transform: translateY(-2px);
   }
 </style>
 
+<div class="quest-course-container">
+  <aside class="quest-list">
+    <h3>🎮 퀘스트 {{ theme }}</h3>
+    <div class="quest-card-list">
+      {% for step in steps %}
+      <div class="quest-card-ui" data-index="{{ loop.index0 }}" data-id="{{ step.id }}" data-title="{{ step.title }}">
+        <div class="quest-number">{{ loop.index }}</div>
+        <div class="quest-content">
+          <div class="quest-title">📍 {{ step.title }}</div>
+          <div class="quest-mission">🎯 {{ step.mission or "특별한 미션을 수행해보세요!" }}</div>
+          <div class="quest-description">{{ step.description }}</div>
+          <div class="quest-coords">좌표: {{ step.lat }}, {{ step.lng }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="refresh-button" onclick="location.reload()">🔄 새로운 퀘스트 로드</button>
+  </aside>
+
+  <section class="map-container">
+    <div id="map"></div>
+  </section>
+</div>
+
+<!-- Quest Modal -->
+<div id="quest-modal" class="modal">
+  <div class="modal-content">
+    <p id="modal-text" class="modal-text">이 퀘스트를 진행하시겠습니까?</p>
+    <div class="modal-buttons">
+      <button id="confirm-btn" class="confirm-btn">⚡ 도전하기</button>
+      <button id="cancel-btn" class="cancel-btn">❌ 취소</button>
+    </div>
+  </div>
+</div>
+
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const map = new naver.maps.Map('map', {
-      center: new naver.maps.LatLng(37.579617, 126.977041),
-      zoom: 14
-    });
-
     const steps = {{ steps | tojson | safe }};
-    console.log("Steps data:", steps); // Debug log
+    console.log("Steps data:", steps);
+    
+    let map;
     const markers = [];
     let selectedQuestId = null;
 
     const completedQuests = JSON.parse(localStorage.getItem("completedQuests") || "[]");
 
-    // Create markers for each step that has valid coordinates
+    // Calculate map bounds to fit all markers
+    function calculateMapBounds(steps) {
+      const validSteps = steps.filter(step => step.lat && step.lng && step.lat !== 0 && step.lng !== 0);
+      
+      if (validSteps.length === 0) {
+        return {
+          center: new naver.maps.LatLng(37.579617, 126.977041),
+          zoom: 14
+        };
+      }
+
+      const lats = validSteps.map(step => step.lat);
+      const lngs = validSteps.map(step => step.lng);
+      
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+      
+      // Calculate center
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLng = (minLng + maxLng) / 2;
+      
+      return {
+        bounds: new naver.maps.LatLngBounds(
+          new naver.maps.LatLng(minLat, minLng),
+          new naver.maps.LatLng(maxLat, maxLng)
+        ),
+        center: new naver.maps.LatLng(centerLat, centerLng)
+      };
+    }
+
+    // Initialize map
+    const mapConfig = calculateMapBounds(steps);
+    
+    map = new naver.maps.Map('map', {
+      center: mapConfig.center,
+      zoom: 14
+    });
+
+    // Fit map to bounds with 90% padding
+    if (mapConfig.bounds) {
+      setTimeout(() => {
+        map.fitBounds(mapConfig.bounds, {
+          top: 50,
+          right: 50,
+          bottom: 50,
+          left: 50
+        });
+      }, 100);
+    }
+
+    // Create markers for each step
     steps.forEach(function(step, index) {
-      console.log(`Step ${index}:`, step); // Debug log
+      console.log(`Step ${index}:`, step);
       if (step.lat && step.lng && step.lat !== 0 && step.lng !== 0) {
         const position = new naver.maps.LatLng(step.lat, step.lng);
 
         const marker = new naver.maps.Marker({
           position: position,
           map: map,
-          title: step.title
+          title: step.title,
+          icon: {
+            content: `
+              <div style="
+                background: linear-gradient(135deg, #3d5a80, #1f4068);
+                border: 3px solid #98c1d9;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                color: #e0fbfc;
+                font-weight: bold;
+                font-size: 1.2rem;
+                text-shadow: 1px 1px #0d1b2a;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+              ">
+                ${index + 1}
+              </div>`,
+            anchor: new naver.maps.Point(20, 20)
+          }
         });
 
         const infoWindow = new naver.maps.InfoWindow({
           content: `
             <div style="
-              background: white;
-              border: 2px solid #ff8800;
-              border-radius: 8px;
-              padding: 8px 12px;
+              background: linear-gradient(135deg, #1b263b, #162447);
+              border: 2px solid #98c1d9;
+              border-radius: 12px;
+              padding: 15px 20px;
+              color: #e0fbfc;
               font-weight: bold;
-              box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
+              box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+              min-width: 200px;
+              text-align: center;
             ">
-              📍 ${step.title}
+              <div style="font-size: 1.1rem; margin-bottom: 8px;">📍 ${step.title}</div>
+              <div style="font-size: 0.9rem; color: #98c1d9; font-style: italic;">${step.mission || "특별한 미션을 수행해보세요!"}</div>
             </div>`,
           backgroundColor: "transparent",
           borderColor: "transparent",
           disableAnchor: true
         });
 
-        // Store marker with step index for proper mapping
         markers[index] = { marker, infoWindow, position };
       } else {
-        // Store null for steps without valid coordinates
         markers[index] = null;
       }
     });
@@ -162,11 +453,11 @@
       const questTitle = card.dataset.title;
 
       if (completedQuests.includes(questId)) {
-        card.classList.add("disabled");
+        card.classList.add("completed");
         return;
       }
 
-      // Only add map interactions if marker exists for this index
+      // Map interactions
       if (markers[index]) {
         const { marker, infoWindow, position } = markers[index];
 
@@ -183,7 +474,10 @@
 
       card.addEventListener("click", () => {
         selectedQuestId = questId;
-        modalText.textContent = `'${questTitle}' 퀘스트를 진행하시겠습니까?`;
+        modalText.innerHTML = `
+          <div style="margin-bottom: 15px;">🎯 <strong>${questTitle}</strong></div>
+          <div style="font-size: 1rem; color: #98c1d9;">이 퀘스트를 진행하시겠습니까?</div>
+        `;
         modal.style.display = "flex";
       });
     });
@@ -198,9 +492,17 @@
       modal.style.display = "none";
       selectedQuestId = null;
     });
+
+    // Close modal on outside click
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.style.display = "none";
+        selectedQuestId = null;
+      }
+    });
   });
 
-  // 새로고침 시 이전 페이지로 리다이렉트
+  // Redirect handling
   window.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams(window.location.search);
     const fromRecommend = params.get("from_recommend");

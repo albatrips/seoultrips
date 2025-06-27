@@ -200,13 +200,13 @@ def get_all_quests():
     if conn is None:
         # Return test data when database connection fails
         return [
-            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "lat": 37.579617, "lng": 126.977041},
-            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "lat": 37.580146, "lng": 126.976892},
-            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "lat": 37.5760, "lng": 126.9859}
+            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "lat": 37.579617, "lng": 126.977041},
+            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "lat": 37.580146, "lng": 126.976892},
+            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "lat": 37.5760, "lng": 126.9859}
         ]
     try:
         cursor = conn.cursor(dictionary=True)
-        query = "SELECT quest_id as id, place_name as title, description, lat, lng FROM quests ORDER BY quest_id"
+        query = "SELECT quest_id as id, place_name as title, description, mission, lat, lng FROM quests ORDER BY quest_id"
         cursor.execute(query)
         result = cursor.fetchall()
         
@@ -219,9 +219,9 @@ def get_all_quests():
         # Return test data if no data found in database
         if not result:
             return [
-                {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "lat": 37.579617, "lng": 126.977041},
-                {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "lat": 37.580146, "lng": 126.976892},
-                {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "lat": 37.5760, "lng": 126.9859}
+                {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "lat": 37.579617, "lng": 126.977041},
+                {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "lat": 37.580146, "lng": 126.976892},
+                {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "lat": 37.5760, "lng": 126.9859}
             ]
         
         return result
@@ -229,9 +229,9 @@ def get_all_quests():
         print(f"Error fetching all quests: {err}")
         # Return test data when database query fails
         return [
-            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "lat": 37.579617, "lng": 126.977041},
-            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "lat": 37.580146, "lng": 126.976892},
-            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "lat": 37.5760, "lng": 126.9859}
+            {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "lat": 37.579617, "lng": 126.977041},
+            {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "lat": 37.580146, "lng": 126.976892},
+            {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "lat": 37.5760, "lng": 126.9859}
         ]
     finally:
         if conn.is_connected():
