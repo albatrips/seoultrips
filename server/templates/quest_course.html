@@ -254,6 +254,85 @@
     position: relative;
   }
 
+  /* 경험치 바 스타일 */
+  .exp-bar-container {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #1b263b, #162447);
+    border: 2px solid #3d5a80;
+    border-radius: 12px;
+    padding: 10px 16px;
+    min-width: 260px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    z-index: 1000;
+    font-family: 'DotGothic16', sans-serif;
+  }
+
+  .exp-bar-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .exp-text {
+    color: #e0fbfc;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-shadow: 1px 1px #0d1b2a;
+  }
+
+  .exp-percentage {
+    color: #98c1d9;
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+  .exp-bar {
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(135deg, #0d1b2a, #162447);
+    border: 1px solid #415a77;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 6px;
+  }
+
+  .exp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #34ce57, #20c997);
+    border-radius: 4px;
+    width: 0%;
+    transition: width 1.5s ease-out;
+    position: relative;
+    box-shadow: 0 0 12px rgba(40, 167, 69, 0.6);
+  }
+
+  .exp-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: expShine 2s ease-in-out infinite;
+  }
+
+  @keyframes expShine {
+    0% { left: -100%; }
+    50% { left: 100%; }
+    100% { left: 100%; }
+  }
+
+  .exp-info {
+    text-align: center;
+    color: #98c1d9;
+    font-size: 0.8rem;
+    font-weight: bold;
+  }
+
   #map {
     width: 100%;
     height: 100%;
@@ -427,11 +506,26 @@
       </div>
       {% endfor %}
     </div>
-    <button class="refresh-button" onclick="location.reload()">🔄 새로운 퀘스트 로드</button>
+    <button class="refresh-button" onclick="window.location.href='/api/custom'">🔄 새로운 퀘스트 로드</button>
   </aside>
 
   <section class="map-container">
     <div id="map"></div>
+    
+    <!-- 경험치 바를 지도 컨테이너 안으로 이동 -->
+    <div class="exp-bar-container">
+      <div class="exp-bar-label">
+        <span class="exp-text">퀘스트 진행률</span>
+        <span class="exp-percentage" id="expPercentage">0%</span>
+      </div>
+      <div class="exp-bar">
+        <div class="exp-fill" id="expFill"></div>
+        <div class="exp-shine"></div>
+      </div>
+      <div class="exp-info">
+        <span id="clearedCount">0</span> / <span id="totalCount">{{ steps|length }}</span> 완료
+      </div>
+    </div>
   </section>
 </div>
 
@@ -448,7 +542,7 @@
 
 <script>
   document.addEventListener("DOMContentLoaded", function () {
-    const steps = {{ steps | tojson | safe }};
+    const steps = JSON.parse('{{ steps | tojson | safe }}');
     
     console.log("Steps data:", steps);
     
@@ -457,6 +551,37 @@
     let selectedQuestId = null;
 
     const completedQuests = JSON.parse(localStorage.getItem("completedQuests") || "[]");
+
+    // 경험치 바 업데이트 함수
+    function updateExpBar() {
+      const totalQuests = steps.length;
+      const clearedQuests = steps.filter(step => step.is_cleared === 1 || completedQuests.includes(step.id)).length;
+      const percentage = totalQuests > 0 ? Math.round((clearedQuests / totalQuests) * 100) : 0;
+      
+      // DOM 요소 업데이트
+      const expFill = document.getElementById('expFill');
+      const expPercentage = document.getElementById('expPercentage');
+      const clearedCount = document.getElementById('clearedCount');
+      
+      if (expFill && expPercentage && clearedCount) {
+        // 애니메이션과 함께 경험치 바 업데이트
+        setTimeout(() => {
+          expFill.style.width = percentage + '%';
+          expPercentage.textContent = percentage + '%';
+          clearedCount.textContent = clearedQuests;
+        }, 500);
+        
+        // 100% 완료 시 특별 효과
+        if (percentage === 100) {
+          setTimeout(() => {
+            expFill.style.background = 'linear-gradient(90deg, #ffd700, #ffed4e, #fff59d)';
+            expFill.style.boxShadow = '0 0 25px rgba(255, 215, 0, 0.8)';
+          }, 2000);
+        }
+      }
+      
+      console.log(`Experience: ${clearedQuests}/${totalQuests} (${percentage}%)`);
+    }
 
     // Calculate map bounds to fit all markers
     function calculateMapBounds(steps) {
@@ -746,6 +871,9 @@
         selectedQuestId = null;
       }
     });
+
+    // 경험치 바 초기화
+    updateExpBar();
   });
 </script>
 

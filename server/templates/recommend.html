@@ -52,6 +52,39 @@
             box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
         }
 
+        /* 내 퀘스트 버튼 스타일 */
+        .my-quest-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #28a745, #155724);
+            color: #ffffff;
+            border: 2px solid #34ce57;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: none; /* 기본적으로 숨김 */
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .my-quest-button:hover {
+            background: linear-gradient(145deg, #34ce57, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 206, 87, 0.4);
+        }
+
+        .my-quest-button.active {
+            display: flex;
+        }
+
         /* Animated background */
         body::before {
             content: '';
@@ -501,6 +534,11 @@
     ← 뒤로가기
 </button>
 
+<!-- 내 퀘스트 버튼 -->
+<button id="my-quest-btn" class="my-quest-button">
+    내 퀘스트
+</button>
+
 <div class="main-container">
     <div class="header-section">
         <h1 class="header-title">추천 루트</h1>
@@ -559,6 +597,7 @@
     const modalTitle = document.getElementById('modalTitle');
     const modalPlace = document.getElementById('modalPlace');
     const backBtn = document.getElementById('back-btn');
+    const myQuestBtn = document.getElementById('my-quest-btn');
 
     // 뒤로가기 버튼 클릭 이벤트
     backBtn.addEventListener('click', () => {
@@ -569,6 +608,28 @@
             window.location.href = "/category";
         }
     });
+
+    // 내 퀘스트 버튼 클릭 이벤트
+    myQuestBtn.addEventListener('click', () => {
+        window.location.href = "/api/quest";
+    });
+
+    // 퀘스트 존재 여부 확인하여 내 퀘스트 버튼 표시
+    async function checkQuestExists() {
+        try {
+            const response = await fetch('/api/check-quests');
+            const data = await response.json();
+            
+            if (data.hasQuests) {
+                myQuestBtn.classList.add('active');
+            }
+        } catch (error) {
+            console.log('퀘스트 확인 중 오류:', error);
+        }
+    }
+
+    // 페이지 로드 시 퀘스트 확인
+    checkQuestExists();
 
     document.querySelectorAll('.course-circle').forEach(circle => {
         circle.addEventListener('click', function(event) {

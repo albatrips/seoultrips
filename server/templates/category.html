@@ -24,6 +24,7 @@
             margin: 0;
             text-align: center;
             overflow: hidden;
+            padding-top: 80px; /* 버튼들을 위한 상단 여백 */
         }
 
         /* Animated background */
@@ -290,9 +291,81 @@
                 font-size: 1.1rem;
             }
         }
+
+        /* 뒤로가기 버튼 스타일 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            border: 2px solid #98c1d9;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
+        }
+
+        /* 내 퀘스트 버튼 스타일 */
+        .my-quest-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #28a745, #155724);
+            color: #ffffff;
+            border: 2px solid #34ce57;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: none; /* 기본적으로 숨김 */
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .my-quest-button:hover {
+            background: linear-gradient(145deg, #34ce57, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 206, 87, 0.4);
+        }
+
+        .my-quest-button.active {
+            display: flex;
+        }
     </style>
 </head>
 <body>
+    <!-- 뒤로가기 버튼 -->
+    <button id="back-btn" class="back-button">
+        ← 뒤로가기
+    </button>
+
+    <!-- 내 퀘스트 버튼 -->
+    <a href="/api/quest" class="my-quest-button" id="myQuestBtn">
+        🎮 내 퀘스트
+    </a>
+
     <div class="container">
         <h1 class="title">어떤 테마의 퀘스트를 원하시나요?</h1>
         <form id="categoryForm" action="/api/recommend" method="post">
@@ -349,6 +422,30 @@
 
         // Initialize UI
         updateUI();
+
+        // 뒤로가기 버튼 이벤트
+        const backBtn = document.getElementById('back-btn');
+        backBtn.addEventListener('click', () => {
+            // 카테고리 페이지에서는 항상 홈으로 이동
+            window.location.href = "/";
+        });
+
+        // 퀘스트 존재 여부 확인하여 내 퀘스트 버튼 표시
+        async function checkQuestExists() {
+            try {
+                const response = await fetch('/api/check-quests');
+                const data = await response.json();
+                
+                if (data.hasQuests) {
+                    document.getElementById('myQuestBtn').classList.add('active');
+                }
+            } catch (error) {
+                console.log('퀘스트 확인 중 오류:', error);
+            }
+        }
+
+        // 페이지 로드 시 퀘스트 확인
+        checkQuestExists();
     </script>
 </body>
 </html>

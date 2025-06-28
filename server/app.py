@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, Form
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,7 +8,7 @@ from server.api.location import router as location_router
 from server.api.quest import router as quest_router
 from server.api.recommend import router as recommend_router
 from server.api.image_upload import router as image_upload_router
-from server.services.client import get_user, save_user, get_all_categories
+from server.services.client import get_user, save_user, get_all_categories, get_all_quests
 from server.utils import CustomJSONEncoder
 import pandas as pd
 
@@ -59,6 +59,17 @@ async def handle_create_user(
 async def category_page(request: Request):
     categories = get_all_categories()
     return templates.TemplateResponse("category.html", {"request": request, "categories": categories})
+
+@app.get("/api/check-quests")
+async def check_quests():
+    """퀘스트 존재 여부를 확인하는 API"""
+    try:
+        quests = get_all_quests()
+        has_quests = len(quests) > 0
+        return JSONResponse(content={"hasQuests": has_quests, "questCount": len(quests)})
+    except Exception as e:
+        print(f"퀘스트 확인 중 오류: {e}")
+        return JSONResponse(content={"hasQuests": False, "questCount": 0})
 
 @app.get("/quest")
 async def quest_course(request: Request, theme: str = "추천 코스"):
