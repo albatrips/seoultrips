@@ -88,7 +88,9 @@ class QuestGeneratorPrompt:
         - 퀘스트는 3개 제안
         - 첫번째 퀘스트는 무조건 관광지 및 구경할 수 있는 곳으로 
         - 퀘스트 장소 가져오는 조건은 사용자 출발 위치와 가까운곳으로 우선 지정
-        - 각 퀘스트는 `mission_name + location + description + expected_time` 구조
+        - 각 퀘스트는 `mission_name + location + description + expected_time + lat + lng + address` 구조
+        - lat, lng는 실제 위치의 정확한 위도, 경도 좌표 (소수점 6자리)
+        - address는 상세 주소 정보
         - 각 퀘스트끼리 하나의 루트처럼 자연스럽게 이어지도록 구성
         - 장소 간 이동 시간과 운영시간 고려하여 추천
         - 실제 운영하는 /존재하는 장소로 추천
@@ -96,6 +98,22 @@ class QuestGeneratorPrompt:
         - 여행 시간 내 수행 가능하도록 설계
         - 여행 시간이 지정되지 않았을때 전체 퀘스트는 1시간 반 내로 진행할 수 있도록 구성
         - 퀘스트는 장소가서 사진찍기, 카페가서 시간보내기, 산(공원) 걷기, 식당가서 00 먹기 등 다양한 엑티비티로 구성
+        
+        [JSON 출력 형식]
+        반드시 다음 구조의 JSON으로 응답하세요:
+        {
+          "quests": [
+            {
+              "mission_name": "미션 이름",
+              "location": "장소명",
+              "description": "상세 설명",
+              "expected_time": "예상 소요 시간",
+              "lat": 37.123456,
+              "lng": 127.123456,
+              "address": "상세 주소"
+            }
+          ]
+        }
         """
     human="""
         [사용자 정보]
@@ -105,11 +123,12 @@ class QuestGeneratorPrompt:
         - 출발 위치: {user_location} 출발 위치
         - 여행 시간: {travel_time} 여행 시간
         - 질문 : {question} 질문
-        - 퀘스트 장소 : 
+        - 퀘스트 장소 데이터 : 
             {excel_data}
             {api_data}
 
-        OUTPUT:
+        위 데이터를 참고하여 실제 존재하는 장소의 정확한 좌표를 포함한 퀘스트를 생성해주세요.
+        JSON 형식으로만 응답하고, 다른 텍스트는 포함하지 마세요.
         """
 
 async def quest_generate(state: QuestState):
