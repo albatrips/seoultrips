@@ -8,7 +8,10 @@ header {
   padding: 10px;
 }
 .categories {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: cneter;
+  margin-top: 20px;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }

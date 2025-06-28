@@ -1,12 +1,661 @@
-{% extends "base.html" %}
-{% block content %}
-    <h2>Your Quest Theme: {{ theme }}</h2>
-    <ul>
-        {% for step in steps %}
-            <li>
-                <strong>{{ step.name }}</strong>: {{ step.description }}
-                <button onclick="completeQuest({{ step.id }})">Complete</button>
-            </li>
-        {% endfor %}
-    </ul>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>추천 퀘스트</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #ffffff;
+            font-family: 'DotGothic16', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 뒤로가기 버튼 스타일 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            border: 2px solid #98c1d9;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
+        }
+
+        /* 내 퀘스트 버튼 스타일 */
+        .my-quest-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #28a745, #155724);
+            color: #ffffff;
+            border: 2px solid #34ce57;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: none; /* 기본적으로 숨김 */
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .my-quest-button:hover {
+            background: linear-gradient(145deg, #34ce57, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 206, 87, 0.4);
+        }
+
+        .my-quest-button.active {
+            display: flex;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(61, 90, 128, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(152, 193, 217, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(31, 64, 104, 0.08) 0%, transparent 50%);
+            animation: backgroundMove 25s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundMove {
+            0%, 100% { transform: translateY(0px) translateX(0px); }
+            33% { transform: translateY(-15px) translateX(10px); }
+            66% { transform: translateY(10px) translateX(-10px); }
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            padding-top: 80px; /* 뒤로가기 버튼 공간 확보 */
+            position: relative;
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .header-title {
+            font-size: 3rem;
+            color: #ffffff;
+            text-shadow: 2px 2px #0d1b2a;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #ffffff, #98c1d9, #3d5a80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titleGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleGlow {
+            from { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3)); }
+            to { filter: drop-shadow(0 0 25px rgba(152, 193, 217, 0.6)); }
+        }
+
+        .direct-input-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 15px;
+            border: 2px solid #98c1d9;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-shadow: 1px 1px #0d1b2a;
+            box-shadow: 
+                0 8px 20px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .direct-input-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .direct-input-button:hover::before {
+            left: 100%;
+        }
+
+        .direct-input-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-3px);
+            box-shadow: 
+                0 12px 30px rgba(152, 193, 217, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .route-list-container {
+            margin: 0 auto;
+            background: linear-gradient(135deg, #162447, #1b263b);
+            border: 3px solid #415a77;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .route-list-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+            border-radius: 20px;
+            z-index: -1;
+            animation: borderFlow 4s linear infinite;
+        }
+
+        @keyframes borderFlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .route-card-link {
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            border-radius: 15px;
+            transition: all 0.4s ease;
+        }
+        
+        .route-card-link:hover .route-card {
+            transform: translateY(-8px);
+            border-color: #98c1d9;
+            box-shadow: 0 15px 40px rgba(152, 193, 217, 0.3);
+        }
+
+        .route-card {
+            background: linear-gradient(135deg, #1b263b, #162447);
+            border: 3px solid #415a77;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            padding: 30px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .route-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(152, 193, 217, 0.05), transparent);
+            transition: left 0.8s ease;
+        }
+
+        .route-card:hover::before {
+            left: 100%;
+        }
+
+        .route-info {
+            flex: 1;
+        }
+
+        .route-title {
+            color: #ffffff;
+            font-size: 2rem;
+            margin: 0 0 30px 0;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #1f4068;
+            text-shadow: 1px 1px #0d1b2a;
+            position: relative;
+        }
+
+        .course-container {
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            padding: 20px 10px;
+            position: relative;
+        }
+
+        .course-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-right: 50px;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .course-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -40px;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 4px;
+            background: linear-gradient(90deg, #3d5a80, #98c1d9);
+            border-radius: 2px;
+            z-index: 1;
+        }
+
+        .course-item:not(:last-child)::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -43px;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid #98c1d9;
+            border-top: 6px solid transparent;
+            border-bottom: 6px solid transparent;
+            z-index: 2;
+            animation: arrowPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes arrowPulse {
+            0%, 100% { opacity: 0.7; transform: translateY(-50%) scale(1); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1.2); }
+        }
+
+        .course-circle {
+            width: 140px;
+            height: 140px;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: 4px solid #415a77;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            color: #ffffff;
+            text-shadow: 1px 1px #0d1b2a;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 10px 25px rgba(0,0,0,0.3),
+                inset 0 2px 0 rgba(255,255,255,0.1);
+        }
+
+        .course-circle::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: transform 0.6s ease;
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+
+        .course-circle:hover::before {
+            transform: translateX(0%) translateY(0%) rotate(45deg);
+        }
+
+        .course-circle:hover {
+            border-color: #98c1d9;
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: scale(1.15);
+            box-shadow: 
+                0 15px 35px rgba(152, 193, 217, 0.4),
+                inset 0 2px 0 rgba(255,255,255,0.2),
+                0 0 30px rgba(152, 193, 217, 0.3);
+        }
+
+        .course-number {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(145deg, #98c1d9, #3d5a80);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1a1a2e;
+            border: 3px solid #ffffff;
+            text-shadow: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .route-metadata {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            background: linear-gradient(145deg, #2a3547, #1e2a3a);
+            border-radius: 15px;
+            border: 2px solid #415a77;
+            min-width: 200px;
+            box-shadow: 
+                0 8px 20px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .time-info {
+            text-align: center;
+            color: #ffffff;
+        }
+
+        .time-label {
+            font-size: 1rem;
+            color: #98c1d9;
+            margin-bottom: 10px;
+            font-weight: normal;
+        }
+
+        .time-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 1px 1px #0d1b2a;
+            background: linear-gradient(45deg, #ffffff, #98c1d9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(26, 26, 46, 0.9);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1b263b, #162447);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #98c1d9;
+            width: 90%;
+            max-width: 500px;
+            color: #ffffff;
+            position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: modalSlideIn 0.4s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-50px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            color: #98c1d9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-button:hover {
+            color: #ffffff;
+            transform: scale(1.2);
+        }
+
+        .modal h2 {
+            color: #ffffff;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px #0d1b2a;
+        }
+
+        .modal p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .route-card {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .course-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .course-item {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+            
+            .course-item:not(:last-child)::after,
+            .course-item:not(:last-child)::before {
+                display: none;
+            }
+            
+            .course-circle {
+                width: 120px;
+                height: 120px;
+                font-size: 1rem;
+            }
+            
+            .header-title {
+                font-size: 2.2rem;
+            }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #ffffff;
+            font-size: 1.3rem;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 뒤로가기 버튼 -->
+<button id="back-btn" class="back-button">
+    ← 뒤로가기
+</button>
+
+<!-- 내 퀘스트 버튼 -->
+<button id="my-quest-btn" class="my-quest-button">
+    내 퀘스트
+</button>
+
+<div class="main-container">
+    <div class="header-section">
+        <h1 class="header-title">추천 루트</h1>
+        <a href="/api/custom" class="direct-input-button">직접 원하는 장소 입력하기</a>
+    </div>
+
+    <div class="route-list-container">
+        {% if routes %}
+            {% for route in routes %}
+            <a href="/api/custom?set_id={{ route.set_id }}" class="route-card-link">
+                <div class="route-card">
+                    <div class="route-info">
+                        <h2 class="route-title">{{ route.route_title }}</h2>
+                        <div class="course-container">
+                            {% for course in route.courses %}
+                            <div class="course-item">
+                                <div class="course-circle" data-routetitle="{{ route.route_title }}" data-placename="{{ course.place_name }}">
+                                    <div class="course-number">{{ loop.index }}</div>
+                                    {{ course.place_name }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% if route.total_estimated_time %}
+                    <div class="route-metadata">
+                        <div class="time-info">
+                            <div class="time-label">예상 소요 시간</div>
+                            <div class="time-value">{{ route.total_estimated_time }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                추천할만한 루트를 찾지 못했어요.<br>다른 테마를 선택해보세요!
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Quest Detail Modal -->
+<div id="questModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalPlace"></p>
+        <p>이 장소에서 멋진 퀘스트를 수행해보세요!</p>
+    </div>
+</div>
+
+<script>
+    const modal = document.getElementById('questModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalPlace = document.getElementById('modalPlace');
+    const backBtn = document.getElementById('back-btn');
+    const myQuestBtn = document.getElementById('my-quest-btn');
+
+    // 뒤로가기 버튼 클릭 이벤트
+    backBtn.addEventListener('click', () => {
+        // 이전 페이지가 있으면 뒤로가기, 없으면 카테고리 페이지로
+        if (document.referrer && document.referrer.includes(window.location.origin)) {
+            window.history.back();
+        } else {
+            window.location.href = "/category";
+        }
+    });
+
+    // 내 퀘스트 버튼 클릭 이벤트
+    myQuestBtn.addEventListener('click', () => {
+        window.location.href = "/api/quest";
+    });
+
+    // 퀘스트 존재 여부 확인하여 내 퀘스트 버튼 표시
+    async function checkQuestExists() {
+        try {
+            const response = await fetch('/api/check-quests');
+            const data = await response.json();
+            
+            if (data.hasQuests) {
+                myQuestBtn.classList.add('active');
+            }
+        } catch (error) {
+            console.log('퀘스트 확인 중 오류:', error);
+        }
+    }
+
+    // 페이지 로드 시 퀘스트 확인
+    checkQuestExists();
+
+    document.querySelectorAll('.course-circle').forEach(circle => {
+        circle.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const routeTitle = this.dataset.routetitle;
+            const placeName = this.dataset.placename;
+            openModal(routeTitle, placeName);
+        });
+    });
+
+    function openModal(routeTitle, placeName) {
+        modalTitle.textContent = routeTitle;
+        modalPlace.textContent = `장소: ${placeName}`;
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    }
+</script>
+</body>
+</html>

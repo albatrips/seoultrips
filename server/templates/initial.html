@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quest Start</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #ffffff;
+            font-family: 'DotGothic16', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            padding-top: 80px; /* 버튼을 위한 상단 여백 */
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(61, 90, 128, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(152, 193, 217, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 90%, rgba(31, 64, 104, 0.1) 0%, transparent 50%);
+            animation: backgroundShift 30s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundShift {
+            0%, 100% { transform: translateX(0px) translateY(0px); }
+            25% { transform: translateX(20px) translateY(-10px); }
+            50% { transform: translateX(-10px) translateY(15px); }
+            75% { transform: translateX(15px) translateY(-20px); }
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1000px;
+            background: linear-gradient(135deg, #162447, #1b263b);
+            border: 3px solid #415a77;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            display: flex;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+            border-radius: 25px;
+            z-index: -1;
+            animation: borderPulse 6s linear infinite;
+        }
+
+        @keyframes borderPulse {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .left-panel, .right-panel {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .left-panel {
+            border-right: 3px solid #1f4068;
+            position: relative;
+        }
+
+        .left-panel::after {
+            content: '';
+            position: absolute;
+            right: -2px;
+            top: 10%;
+            bottom: 10%;
+            width: 2px;
+            background: linear-gradient(180deg, transparent, #98c1d9, transparent);
+            animation: dividerGlow 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes dividerGlow {
+            from { opacity: 0.3; }
+            to { opacity: 0.8; }
+        }
+
+        .status-box, .action-box, .edit-form {
+            background: linear-gradient(135deg, #1b263b, #162447);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid #415a77;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-box::before, .action-box::before, .edit-form::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(152, 193, 217, 0.05), transparent);
+            transition: left 0.8s ease;
+        }
+
+        .status-box:hover::before, .action-box:hover::before {
+            left: 100%;
+        }
+        
+        h1, h2 {
+            color: #ffffff;
+            text-shadow: 2px 2px #0d1b2a;
+            font-size: 2rem;
+            margin-bottom: 25px;
+            background: linear-gradient(45deg, #ffffff, #98c1d9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-title {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            animation: titleFloat 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes titleFloat {
+            from { transform: translateY(0px); filter: drop-shadow(0 0 10px rgba(224, 251, 252, 0.3)); }
+            to { transform: translateY(-5px); filter: drop-shadow(0 0 20px rgba(152, 193, 217, 0.5)); }
+        }
+
+        .welcome-subtitle {
+            font-size: 1.3rem;
+            color: #ffffff;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .status-item {
+            font-size: 1.3rem;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(13, 27, 42, 0.6);
+            border-radius: 12px;
+            border-left: 4px solid #3d5a80;
+            transition: all 0.3s ease;
+            color: #ffffff;
+        }
+
+        .status-item:hover {
+            border-left-color: #98c1d9;
+            transform: translateX(5px);
+        }
+
+        .status-item span {
+            color: #98c1d9;
+            font-weight: bold;
+            display: inline-block;
+            width: 100px;
+        }
+
+        .action-box p {
+            font-size: 1.4rem;
+            text-align: center;
+            margin-bottom: 35px;
+            color: #ffffff;
+            line-height: 1.5;
+        }
+
+        .action-button {
+            display: block;
+            width: 85%;
+            margin: 0 auto;
+            padding: 18px 25px;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            text-decoration: none;
+            text-align: center;
+            border-radius: 15px;
+            border: 3px solid #98c1d9;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-shadow: 1px 1px #0d1b2a;
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .action-button:hover::before {
+            left: 100%;
+        }
+
+        .action-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 
+                0 12px 35px rgba(152, 193, 217, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .edit-button {
+            margin-top: 25px;
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+            color: #98c1d9;
+            font-weight: bold;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid #415a77;
+            background: linear-gradient(145deg, #1b263b, #162447);
+            color: #ffffff;
+            font-family: 'DotGothic16', sans-serif;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #98c1d9;
+            box-shadow: 0 0 15px rgba(152, 193, 217, 0.3), inset 0 2px 8px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .radio-group {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            gap: 15px;
+        }
+
+        .radio-group input[type="radio"] {
+            display: none;
+        }
+
+        .radio-group label {
+            cursor: pointer;
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 2px solid #415a77;
+            background: linear-gradient(145deg, #1b263b, #162447);
+            color: #ffffff;
+            flex: 1;
+            text-align: center;
+            transition: all 0.4s ease;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .radio-group label::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .radio-group label:hover::before {
+            left: 100%;
+        }
+
+        .radio-group label:hover {
+            border-color: #98c1d9;
+            transform: translateY(-2px);
+        }
+
+        .radio-group input[type="radio"]:checked + label {
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            border-color: #98c1d9;
+            box-shadow: 0 0 20px rgba(152, 193, 217, 0.4);
+            transform: translateY(-3px);
+        }
+
+        /* Form animations */
+        .edit-form {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 30px 20px;
+            }
+            
+            .left-panel {
+                border-right: none;
+                border-bottom: 3px solid #1f4068;
+                margin-bottom: 20px;
+            }
+            
+            .left-panel::after {
+                display: none;
+            }
+            
+            .welcome-title {
+                font-size: 2rem;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* 내 퀘스트 버튼 스타일 */
+        .my-quest-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #28a745, #155724);
+            color: #ffffff;
+            border: 2px solid #34ce57;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: none; /* 기본적으로 숨김 */
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .my-quest-button:hover {
+            background: linear-gradient(145deg, #34ce57, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 206, 87, 0.4);
+        }
+
+        .my-quest-button.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <!-- 내 퀘스트 버튼 -->
+    <a href="/api/quest" class="my-quest-button" id="myQuestBtn">
+        🎮 내 퀘스트
+    </a>
+
+    <div class="container">
+        {% if user %}
+        <div class="left-panel">
+            <div class="status-box" id="userInfo">
+                <h2>플레이어 정보</h2>
+                <div class="status-item"><span>나이:</span> {{ user.age }}세</div>
+                <div class="status-item"><span>성별:</span> {{ user.gender }}</div>
+                <div class="status-item"><span>여행 지역:</span> {{ user.location }}</div>
+                <div class="status-item"><span>코스 시간:</span> {{ user.travel_time }}시간</div>
+                <button class="action-button edit-button" id="editButton">정보 수정</button>
+            </div>
+            <div class="edit-form" id="editForm" style="display: none;">
+                <h2>정보 수정</h2>
+                <form action="/create-user" method="post">
+                    <div class="input-group">
+                        <label for="age">나이</label>
+                        <input type="number" id="age" name="age" value="{{ user.age }}" min="1" max="100" required>
+                    </div>
+                    <div class="input-group">
+                        <label>성별</label>
+                        <div class="radio-group">
+                            <input type="radio" id="male_edit" name="gender" value="남성" {% if user.gender == '남성' %}checked{% endif %} required>
+                            <label for="male_edit">남성</label>
+                            <input type="radio" id="female_edit" name="gender" value="여성" {% if user.gender == '여성' %}checked{% endif %}>
+                            <label for="female_edit">여성</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">여행 지역</label>
+                        <select id="location" name="location" required>
+                            {% for sigungu in sigungu_list %}
+                            <option value="{{ sigungu }}" {% if sigungu == user.location %}selected{% endif %}>{{ sigungu }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="travel_time">코스 시간 (시간)</label>
+                        <input type="number" id="travel_time" name="travel_time" value="{{ user.travel_time }}" min="1" max="24" required>
+                    </div>
+                    <button type="submit" class="action-button">수정 완료</button>
+                </form>
+            </div>
+        </div>
+        <div class="right-panel">
+            <div class="action-box">
+                <p>모든 정보가 준비되었습니다.<br>이제 새로운 모험을 시작해보세요!</p>
+                <a href="/category" class="action-button">퀘스트 시작하기</a>
+            </div>
+        </div>
+        {% else %}
+        <div class="left-panel">
+            <h1 class="welcome-title">새로운 모험가</h1>
+            <p class="welcome-subtitle">서울의 숨겨진 보물을 찾아<br>떠나는 특별한 여정<br><br>당신만의 퀘스트가<br>지금 시작됩니다</p>
+        </div>
+        <div class="right-panel">
+            <div class="edit-form">
+                <h2>모험가 등록</h2>
+                <form action="/create-user" method="post">
+                    <div class="input-group">
+                        <label for="age">나이</label>
+                        <input type="number" id="age" name="age" min="1" max="100" placeholder="나이를 입력하세요" required>
+                    </div>
+                    <div class="input-group">
+                        <label>성별</label>
+                        <div class="radio-group">
+                            <input type="radio" id="male" name="gender" value="남성" required>
+                            <label for="male">남성</label>
+                            <input type="radio" id="female" name="gender" value="여성">
+                            <label for="female">여성</label>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label for="location">여행 지역</label>
+                        <select id="location" name="location" required>
+                            <option value="" disabled selected>지역을 선택하세요</option>
+                            {% for sigungu in sigungu_list %}
+                            <option value="{{ sigungu }}">{{ sigungu }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="travel_time">코스 시간 (시간)</label>
+                        <input type="number" id="travel_time" name="travel_time" min="1" max="24" placeholder="원하는 코스 시간" required>
+                    </div>
+                    <button type="submit" class="action-button">모험 시작하기</button>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if user %}
+    <script>
+        document.getElementById('editButton').addEventListener('click', () => {
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('editForm').style.display = 'block';
+        });
+
+        // 퀘스트 존재 여부 확인하여 내 퀘스트 버튼 표시
+        async function checkQuestExists() {
+            try {
+                const response = await fetch('/api/check-quests');
+                const data = await response.json();
+                
+                if (data.hasQuests) {
+                    document.getElementById('myQuestBtn').classList.add('active');
+                }
+            } catch (error) {
+                console.log('퀘스트 확인 중 오류:', error);
+            }
+        }
+
+        // 페이지 로드 시 퀘스트 확인
+        checkQuestExists();
+    </script>
+    {% else %}
+    <script>
+        // 퀘스트 존재 여부 확인하여 내 퀘스트 버튼 표시
+        async function checkQuestExists() {
+            try {
+                const response = await fetch('/api/check-quests');
+                const data = await response.json();
+                
+                if (data.hasQuests) {
+                    document.getElementById('myQuestBtn').classList.add('active');
+                }
+            } catch (error) {
+                console.log('퀘스트 확인 중 오류:', error);
+            }
+        }
+
+        // 페이지 로드 시 퀘스트 확인
+        checkQuestExists();
+    </script>
+    {% endif %}
+</body>
+</html> 

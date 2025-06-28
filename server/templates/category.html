@@ -1,17 +1,451 @@
-{% extends "base.html" %}
-{% block content %}
-<h2>어떤 것에 관심이 있으세요?</h2>
-<p>홈피드를 사용자 지정할 수 있도록 5개를 골라주세요</p>
-<div class="categories">
-  <div class="category" data-theme="배경화면">배경화면</div>
-  <div class="category" data-theme="일본 애니메이션">일본 애니메이션</div>
-  <div class="category" data-theme="예술">예술</div>
-  <div class="category" data-theme="사진">사진</div>
-  <div class="category" data-theme="그래픽 디자인">그래픽 디자인</div>
-  <div class="category" data-theme="동물">동물</div>
-  <div class="category" data-theme="여성 패션">여성 패션</div>
-  <div class="category" data-theme="남자 스타일">남자 스타일</div>
-  <div class="category" data-theme="새끼 고양이">새끼 고양이</div>
-  <div class="category" data-theme="인테리어">인테리어</div>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테마 선택</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #1a1a2e;
+            color: #ffffff;
+            font-family: 'DotGothic16', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+            overflow: hidden;
+            padding-top: 80px; /* 버튼들을 위한 상단 여백 */
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 25% 25%, rgba(61, 90, 128, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(152, 193, 217, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(31, 64, 104, 0.1) 0%, transparent 50%);
+            animation: backgroundPulse 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes backgroundPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1100px;
+            padding: 50px;
+            background: linear-gradient(135deg, #162447, #1b263b);
+            border: 3px solid #415a77;
+            border-radius: 25px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+            border-radius: 25px;
+            z-index: -1;
+            animation: borderGlow 5s linear infinite;
+        }
+
+        @keyframes borderGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .title {
+            color: #ffffff;
+            text-shadow: 2px 2px #0d1b2a;
+            font-size: 2.8rem;
+            margin-bottom: 50px;
+            background: linear-gradient(45deg, #ffffff, #98c1d9, #3d5a80);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: titlePulse 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes titlePulse {
+            from { filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4)); }
+            to { filter: drop-shadow(0 0 30px rgba(152, 193, 217, 0.7)); }
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 25px;
+            margin-bottom: 50px;
+        }
+
+        .category-item {
+            background: linear-gradient(145deg, #2a3547, #1e2a3a);
+            padding: 30px 20px;
+            border-radius: 20px;
+            border: 3px solid #415a77;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            font-size: 1.3rem;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 1px 1px #0d1b2a;
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.1);
+            color: #ffffff;
+        }
+
+        .category-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(152, 193, 217, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .category-item::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .category-item:hover::before {
+            left: 100%;
+        }
+
+        .category-item:hover::after {
+            opacity: 1;
+        }
+
+        .category-item:hover {
+            transform: translateY(-8px) scale(1.05);
+            border-color: #98c1d9;
+            box-shadow: 
+                0 15px 35px rgba(152, 193, 217, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                0 0 30px rgba(152, 193, 217, 0.3);
+            background: linear-gradient(145deg, #3a4a5f, #2a3547);
+        }
+
+        .category-item.active {
+            border-color: #98c1d9;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            box-shadow: 
+                0 0 30px rgba(152, 193, 217, 0.6),
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                0 15px 35px rgba(152, 193, 217, 0.4);
+            transform: translateY(-5px) scale(1.08);
+        }
+
+        .category-item.active::after {
+            opacity: 1;
+            background: linear-gradient(45deg, #98c1d9, #3d5a80, #1f4068, #98c1d9);
+            animation: activeBorder 2s ease-in-out infinite;
+        }
+
+        @keyframes activeBorder {
+            0%, 100% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .action-button {
+            display: inline-block;
+            padding: 20px 40px;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 20px;
+            border: 3px solid #98c1d9;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-shadow: 2px 2px #0d1b2a;
+            box-shadow: 
+                0 10px 30px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2),
+                0 0 20px rgba(152, 193, 217, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .action-button::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+            border-radius: 20px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .action-button:hover::before {
+            left: 100%;
+        }
+
+        .action-button:hover::after {
+            opacity: 1;
+        }
+
+        .action-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 
+                0 15px 40px rgba(152, 193, 217, 0.5),
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                0 0 30px rgba(152, 193, 217, 0.5);
+        }
+
+        .action-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-button:disabled:hover {
+            transform: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .action-button:disabled::after {
+            opacity: 0;
+        }
+
+        .selection-counter {
+            margin-top: 20px;
+            font-size: 1.1rem;
+            color: #ffffff;
+            opacity: 0.9;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .title {
+                font-size: 2.2rem;
+            }
+            
+            .category-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 20px;
+            }
+            
+            .category-item {
+                padding: 25px 15px;
+                font-size: 1.1rem;
+            }
+        }
+
+        /* 뒤로가기 버튼 스타일 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            border: 2px solid #98c1d9;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
+        }
+
+        /* 내 퀘스트 버튼 스타일 */
+        .my-quest-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #28a745, #155724);
+            color: #ffffff;
+            border: 2px solid #34ce57;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: none; /* 기본적으로 숨김 */
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .my-quest-button:hover {
+            background: linear-gradient(145deg, #34ce57, #28a745);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 206, 87, 0.4);
+        }
+
+        .my-quest-button.active {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <!-- 뒤로가기 버튼 -->
+    <button id="back-btn" class="back-button">
+        ← 뒤로가기
+    </button>
+
+    <!-- 내 퀘스트 버튼 -->
+    <a href="/api/quest" class="my-quest-button" id="myQuestBtn">
+        🎮 내 퀘스트
+    </a>
+
+    <div class="container">
+        <h1 class="title">어떤 테마의 퀘스트를 원하시나요?</h1>
+        <form id="categoryForm" action="/api/recommend" method="post">
+            <div class="category-grid">
+                {% for category in categories %}
+                <div class="category-item" data-value="{{ category }}">{{ category }}</div>
+                {% endfor %}
+            </div>
+            <input type="hidden" name="categories" id="selectedCategories">
+            <button type="submit" class="action-button" id="submitButton" disabled>선택 완료</button>
+            <div class="selection-counter" id="selectionCounter">선택된 테마: 0개</div>
+        </form>
+    </div>
+
+    <script>
+        const categoryItems = document.querySelectorAll('.category-item');
+        const selectedCategoriesInput = document.getElementById('selectedCategories');
+        const form = document.getElementById('categoryForm');
+        const submitButton = document.getElementById('submitButton');
+        const selectionCounter = document.getElementById('selectionCounter');
+        
+        let selected = [];
+
+        function updateUI() {
+            selectionCounter.textContent = `선택된 테마: ${selected.length}개`;
+            submitButton.disabled = selected.length === 0;
+        }
+
+        categoryItems.forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('active');
+                const value = item.dataset.value;
+
+                if (item.classList.contains('active')) {
+                    if (!selected.includes(value)) {
+                        selected.push(value);
+                    }
+                } else {
+                    selected = selected.filter(v => v !== value);
+                }
+                
+                updateUI();
+            });
+        });
+
+        form.addEventListener('submit', (e) => {
+            if (selected.length === 0) {
+                e.preventDefault();
+                alert('최소 하나의 테마를 선택해주세요!');
+                return;
+            }
+            selectedCategoriesInput.value = JSON.stringify(selected);
+        });
+
+        // Initialize UI
+        updateUI();
+
+        // 뒤로가기 버튼 이벤트
+        const backBtn = document.getElementById('back-btn');
+        backBtn.addEventListener('click', () => {
+            // 카테고리 페이지에서는 항상 홈으로 이동
+            window.location.href = "/";
+        });
+
+        // 퀘스트 존재 여부 확인하여 내 퀘스트 버튼 표시
+        async function checkQuestExists() {
+            try {
+                const response = await fetch('/api/check-quests');
+                const data = await response.json();
+                
+                if (data.hasQuests) {
+                    document.getElementById('myQuestBtn').classList.add('active');
+                }
+            } catch (error) {
+                console.log('퀘스트 확인 중 오류:', error);
+            }
+        }
+
+        // 페이지 로드 시 퀘스트 확인
+        checkQuestExists();
+    </script>
+</body>
+</html>
