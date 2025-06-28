@@ -21,6 +21,35 @@
       overflow-x: hidden;
     }
 
+    /* 뒤로가기 버튼 스타일 */
+    .back-button {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: linear-gradient(145deg, #3d5a80, #1f4068);
+      color: #ffffff;
+      border: 2px solid #98c1d9;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+      font-family: 'DotGothic16', sans-serif;
+    }
+
+    .back-button:hover {
+      background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
+    }
+
     /* Animated background */
     body::before {
       content: '';
@@ -447,9 +476,280 @@
         font-size: 1.1rem;
       }
     }
+
+    /* 로딩 오버레이 스타일 */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(26, 26, 46, 0.95);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      backdrop-filter: blur(10px);
+    }
+
+    .loading-content {
+      background: linear-gradient(135deg, #1b263b, #162447);
+      border: 3px solid #98c1d9;
+      border-radius: 25px;
+      padding: 50px 40px;
+      text-align: center;
+      box-shadow: 
+        0 20px 50px rgba(0,0,0,0.5),
+        0 0 0 1px rgba(152, 193, 217, 0.2);
+      max-width: 400px;
+      width: 90%;
+      position: relative;
+      overflow: hidden;
+      animation: loadingSlideIn 0.5s ease-out;
+    }
+
+    @keyframes loadingSlideIn {
+      from { opacity: 0; transform: translateY(-30px) scale(0.9); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .loading-content::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      background: linear-gradient(45deg, #1f4068, #3d5a80, #98c1d9, #1f4068);
+      border-radius: 25px;
+      z-index: -1;
+      animation: loadingBorderGlow 3s linear infinite;
+    }
+
+    @keyframes loadingBorderGlow {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-robot {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 25px;
+      position: relative;
+      animation: robotFloat 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes robotFloat {
+      from { transform: translateY(-5px); }
+      to { transform: translateY(5px); }
+    }
+
+    .robot-head {
+      width: 50px;
+      height: 40px;
+      background: linear-gradient(145deg, #3d5a80, #1f4068);
+      border-radius: 15px 15px 8px 8px;
+      position: relative;
+      margin: 0 auto;
+      border: 2px solid #98c1d9;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .robot-eyes {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      margin-top: 5px;
+    }
+
+    .robot-eye {
+      width: 8px;
+      height: 8px;
+      background: #98c1d9;
+      border-radius: 50%;
+      animation: robotBlink 3s infinite;
+      box-shadow: 0 0 10px rgba(152, 193, 217, 0.8);
+    }
+
+    @keyframes robotBlink {
+      0%, 90%, 100% { opacity: 1; transform: scaleY(1); }
+      95% { opacity: 0.3; transform: scaleY(0.1); }
+    }
+
+    .robot-antenna {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 12px;
+      background: #98c1d9;
+      border-radius: 1px;
+    }
+
+    .robot-antenna::after {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 6px;
+      height: 6px;
+      background: #98c1d9;
+      border-radius: 50%;
+      animation: antennaGlow 1.5s ease-in-out infinite alternate;
+      box-shadow: 0 0 15px rgba(152, 193, 217, 0.8);
+    }
+
+    @keyframes antennaGlow {
+      from { opacity: 0.5; box-shadow: 0 0 10px rgba(152, 193, 217, 0.5); }
+      to { opacity: 1; box-shadow: 0 0 20px rgba(152, 193, 217, 1); }
+    }
+
+    .robot-body {
+      width: 35px;
+      height: 25px;
+      background: linear-gradient(145deg, #415a77, #162447);
+      border-radius: 8px;
+      margin: 5px auto 0;
+      border: 2px solid #98c1d9;
+      position: relative;
+    }
+
+    .robot-panel {
+      width: 4px;
+      height: 4px;
+      background: #98c1d9;
+      border-radius: 1px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: panelBlink 2s infinite;
+      box-shadow: 0 0 8px rgba(152, 193, 217, 0.6);
+    }
+
+    @keyframes panelBlink {
+      0%, 50%, 100% { opacity: 1; }
+      25%, 75% { opacity: 0.3; }
+    }
+
+    .loading-text {
+      color: #ffffff;
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px #0d1b2a;
+      animation: textPulse 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes textPulse {
+      from { opacity: 0.8; }
+      to { opacity: 1; }
+    }
+
+    .loading-subtext {
+      color: #98c1d9;
+      font-size: 1rem;
+      line-height: 1.4;
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+
+    .loading-dots {
+      display: inline-flex;
+      gap: 4px;
+    }
+
+    .loading-dot {
+      width: 8px;
+      height: 8px;
+      background: #98c1d9;
+      border-radius: 50%;
+      animation: dotWave 1.4s ease-in-out infinite;
+      box-shadow: 0 0 10px rgba(152, 193, 217, 0.5);
+    }
+
+    .loading-dot:nth-child(1) { animation-delay: 0s; }
+    .loading-dot:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes dotWave {
+      0%, 60%, 100% { 
+        opacity: 0.4; 
+        transform: scale(0.8); 
+      }
+      30% { 
+        opacity: 1; 
+        transform: scale(1.2); 
+        box-shadow: 0 0 15px rgba(152, 193, 217, 0.8);
+      }
+    }
+
+    .loading-progress {
+      width: 100%;
+      height: 4px;
+      background: rgba(65, 90, 119, 0.3);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .loading-progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3d5a80, #98c1d9, #3d5a80);
+      border-radius: 2px;
+      animation: progressFlow 2s ease-in-out infinite;
+      box-shadow: 0 0 10px rgba(152, 193, 217, 0.5);
+    }
+
+    @keyframes progressFlow {
+      0% { width: 0%; }
+      50% { width: 70%; }
+      100% { width: 100%; }
+    }
   </style>
 </head>
 <body>
+
+<!-- 뒤로가기 버튼 -->
+<button id="back-btn" class="back-button">
+  ← 뒤로가기
+</button>
+
+<!-- 로딩 오버레이 -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="loading-content">
+    <div class="loading-robot">
+      <div class="robot-head">
+        <div class="robot-antenna"></div>
+        <div class="robot-eyes">
+          <div class="robot-eye"></div>
+          <div class="robot-eye"></div>
+        </div>
+      </div>
+      <div class="robot-body">
+        <div class="robot-panel"></div>
+      </div>
+    </div>
+    
+    <div class="loading-text">AI 퀘스트 평가 중</div>
+    <div class="loading-subtext">
+      업로드한 사진을 분석하고<br>
+      미션 완료 여부를 검증하고 있어요
+      <div class="loading-dots">
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+        <div class="loading-dot"></div>
+      </div>
+    </div>
+    
+    <div class="loading-progress">
+      <div class="loading-progress-bar"></div>
+    </div>
+  </div>
+</div>
 
 <div class="quest-wrapper">
   <div class="quest-card">
@@ -545,9 +845,40 @@
     const photoInput = document.getElementById("photo-input");
     const previewImage = document.getElementById("preview-image");
     const submitBtn = document.getElementById("submit-btn");
+    const backBtn = document.getElementById("back-btn");
+    const photoForm = document.getElementById("photo-form");
+    const loadingOverlay = document.getElementById("loading-overlay");
     const result = "{{ result | default('') }}";
     const questId = {{ quest.id }};
     const modalContent = document.querySelector(".modal-content");
+    
+    // 뒤로가기 버튼 클릭 이벤트
+    backBtn.addEventListener("click", () => {
+      // 이전 페이지가 있으면 뒤로가기, 없으면 퀘스트 목록으로
+      if (document.referrer && document.referrer.includes(window.location.origin)) {
+        window.history.back();
+      } else {
+        window.location.href = "/api/quest";
+      }
+    });
+
+    // 폼 제출 시 로딩창 표시
+    photoForm.addEventListener("submit", (e) => {
+      // 사진이 선택되었는지 확인
+      if (!photoInput.files || !photoInput.files[0]) {
+        e.preventDefault();
+        alert("사진을 먼저 선택해주세요!");
+        return;
+      }
+      
+      // 로딩 오버레이 표시
+      loadingOverlay.style.display = "flex";
+      
+      // 버튼 비활성화
+      submitBtn.disabled = true;
+      submitBtn.style.opacity = "0.6";
+      submitBtn.style.cursor = "not-allowed";
+    });
     
     // Handle verification data safely
     let verification = null;
@@ -629,6 +960,11 @@
         submitBtn.style.display = "none";
         photoInput.value = "";
         modalContent.classList.remove("fail-modal");
+        
+        // 버튼 다시 활성화
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = "1";
+        submitBtn.style.cursor = "pointer";
       }
     });
   });

@@ -23,6 +23,35 @@
             overflow-x: hidden;
         }
 
+        /* 뒤로가기 버튼 스타일 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            border: 2px solid #98c1d9;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
+        }
+
         /* Animated background */
         body::before {
             content: '';
@@ -48,6 +77,7 @@
             max-width: 1400px;
             margin: 0 auto;
             padding: 40px 20px;
+            padding-top: 80px; /* 뒤로가기 버튼 공간 확보 */
             position: relative;
         }
 
@@ -407,211 +437,265 @@
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <div class="header-section">
-            <h1 class="header-title">🎮 퀘스트 커스터마이저</h1>
-            <p class="subtitle">당신만의 특별한 모험을 설계하세요!</p>
-        </div>
 
-        <div class="quest-input-section">
-            <form class="input-form" id="questForm">
-                <input type="text" name="quest_input" class="quest-input" placeholder="원하는 퀘스트를 입력해보세요... (예: 강남에서 카페 투어하기)" required>
-                <button type="submit" class="generate-btn">⚡ 퀘스트 생성</button>
-            </form>
-        </div>
+<!-- 뒤로가기 버튼 -->
+<button id="back-btn" class="back-button">
+    ← 뒤로가기
+</button>
 
-        <div class="quests-section" id="questsSection" {% if set_details %}style="display: block;"{% endif %}>
-            <div class="quests-grid" id="questsGrid">
-                {% if set_details %}
-                    {% for detail in set_details %}
-                    <div class="quest-card">
-                        <div class="quest-number">{{ loop.index }}</div>
-                        <div class="quest-content">
-                            <h3 class="quest-title">📍 {{ detail.place_name }}</h3>
-                            
-                            {% if detail.mission %}
-                            <div class="quest-detail quest-mission">
-                                <span class="quest-detail-label">🎯 미션</span>
-                                <div class="quest-detail-value">{{ detail.mission }}</div>
-                            </div>
-                            {% endif %}
+<div class="main-container">
+    <div class="header-section">
+        <h1 class="header-title">🎮 퀘스트 커스터마이저</h1>
+        <p class="subtitle">당신만의 특별한 서울 모험을 설계해보세요</p>
+    </div>
 
-                            {% if detail.description %}
-                            <div class="quest-detail">
-                                <span class="quest-detail-label">📝 설명</span>
-                                <div class="quest-detail-value">{{ detail.description }}</div>
-                            </div>
-                            {% endif %}
+    <div class="quest-input-section">
+        <form class="input-form" id="questForm">
+            <input type="text" name="quest_input" class="quest-input" placeholder="원하는 퀘스트를 입력해보세요... (예: 강남에서 카페 투어하기)" required>
+            <button type="submit" class="generate-btn">⚡ 퀘스트 생성</button>
+        </form>
+    </div>
 
-                            {% if detail.take_time %}
-                            <div class="quest-detail">
-                                <span class="quest-detail-label">⏱️ 소요 시간</span>
-                                <div class="quest-detail-value">{{ detail.take_time }}</div>
-                            </div>
-                            {% endif %}
-
-                            {% if detail.signgu %}
-                            <div class="quest-detail">
-                                <span class="quest-detail-label">🗺️ 지역</span>
-                                <div class="quest-detail-value">{{ detail.signgu }}</div>
-                            </div>
-                            {% endif %}
-
-                            {% if detail.photomission %}
-                            <div class="quest-detail">
-                                <span class="quest-detail-label">📸 포토 미션</span>
-                                <div class="quest-detail-value">{{ detail.photomission }}</div>
-                            </div>
-                            {% endif %}
-
-                            {% if detail.lat and detail.lng %}
-                            <div class="quest-detail">
-                                <span class="quest-detail-label">🧭 좌표</span>
-                                <div class="quest-detail-value">{{ detail.lat }}, {{ detail.lng }}</div>
-                            </div>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-            </div>
-
+    <div class="quests-section" id="questsSection" {% if set_details %}style="display: block;"{% endif %}>
+        <div class="quests-grid" id="questsGrid">
             {% if set_details %}
-            <div class="start-quest-section">
-                <form action="/api/start-quest" method="post" class="hidden-form" id="startQuestForm">
-                    {% for detail in set_details %}
-                    <input type="hidden" name="course_id_{{ loop.index0 }}" value="{{ detail.course_id }}">
-                    <input type="hidden" name="mission_{{ loop.index0 }}" value="{{ detail.mission or detail.place_name }}">
-                    <input type="hidden" name="place_name_{{ loop.index0 }}" value="{{ detail.place_name }}">
-                    <input type="hidden" name="description_{{ loop.index0 }}" value="{{ detail.description }}">
-                    <input type="hidden" name="address_{{ loop.index0 }}" value="{{ detail.address or '' }}">
-                    <input type="hidden" name="lat_{{ loop.index0 }}" value="{{ detail.lat }}">
-                    <input type="hidden" name="lng_{{ loop.index0 }}" value="{{ detail.lng }}">
-                    {% endfor %}
-                </form>
-                <button type="button" class="start-quest-btn" onclick="document.getElementById('startQuestForm').submit();">
-                    🚀 퀘스트 시작하기
-                </button>
-            </div>
+                {% for detail in set_details %}
+                <div class="quest-card">
+                    <div class="quest-number">{{ loop.index }}</div>
+                    <div class="quest-content">
+                        <h3 class="quest-title">📍 {{ detail.place_name }}</h3>
+                        
+                        {% if detail.mission %}
+                        <div class="quest-detail quest-mission">
+                            <span class="quest-detail-label">🎯 미션</span>
+                            <div class="quest-detail-value">{{ detail.mission }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if detail.description %}
+                        <div class="quest-detail">
+                            <span class="quest-detail-label">📝 설명</span>
+                            <div class="quest-detail-value">{{ detail.description }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if detail.take_time %}
+                        <div class="quest-detail">
+                            <span class="quest-detail-label">⏱️ 소요 시간</span>
+                            <div class="quest-detail-value">{{ detail.take_time }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if detail.signgu %}
+                        <div class="quest-detail">
+                            <span class="quest-detail-label">🗺️ 지역</span>
+                            <div class="quest-detail-value">{{ detail.signgu }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if detail.photomission %}
+                        <div class="quest-detail">
+                            <span class="quest-detail-label">📸 포토 미션</span>
+                            <div class="quest-detail-value">{{ detail.photomission }}</div>
+                        </div>
+                        {% endif %}
+
+                        {% if detail.lat and detail.lng %}
+                        <div class="quest-detail">
+                            <span class="quest-detail-label">🧭 좌표</span>
+                            <div class="quest-detail-value">{{ detail.lat }}, {{ detail.lng }}</div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
             {% endif %}
         </div>
-    </div>
 
-    <!-- Loading Overlay -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">퀘스트 생성 중...</p>
-            <p class="loading-subtext">AI가 당신만의 모험을 설계하고 있습니다</p>
+        {% if set_details %}
+        <div class="start-quest-section">
+            <form action="/api/start-quest" method="post" class="hidden-form" id="startQuestForm">
+                {% for detail in set_details %}
+                <input type="hidden" name="course_id_{{ loop.index0 }}" value="{{ detail.course_id }}">
+                <input type="hidden" name="mission_{{ loop.index0 }}" value="{{ detail.mission or detail.place_name }}">
+                <input type="hidden" name="place_name_{{ loop.index0 }}" value="{{ detail.place_name }}">
+                <input type="hidden" name="description_{{ loop.index0 }}" value="{{ detail.description }}">
+                <input type="hidden" name="address_{{ loop.index0 }}" value="{{ detail.address or '' }}">
+                <input type="hidden" name="lat_{{ loop.index0 }}" value="{{ detail.lat }}">
+                <input type="hidden" name="lng_{{ loop.index0 }}" value="{{ detail.lng }}">
+                {% endfor %}
+            </form>
+            <button type="button" class="start-quest-btn" onclick="document.getElementById('startQuestForm').submit();">
+                🚀 퀘스트 시작하기
+            </button>
         </div>
+        {% endif %}
     </div>
+</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const questForm = document.getElementById('questForm');
-            const questsSection = document.getElementById('questsSection');
-            const loadingOverlay = document.getElementById('loadingOverlay');
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">퀘스트 생성 중...</p>
+        <p class="loading-subtext">AI가 당신만의 모험을 설계하고 있습니다</p>
+    </div>
+</div>
 
-            questForm.addEventListener('submit', function(event) {
-                event.preventDefault();
-
-                const questInput = document.querySelector('input[name="quest_input"]').value.trim();
-                if (!questInput) {
-                    alert('퀘스트를 입력해주세요!');
-                    return;
-                }
-
-                // Show loading
-                loadingOverlay.style.display = 'flex';
-
-                const payload = { question: questInput };
-
-                fetch('/api/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    loadingOverlay.style.display = 'none';
-                    displayQuests(data);
-                })
-                .catch(error => {
-                    loadingOverlay.style.display = 'none';
-                    console.error("Error:", error);
-                    alert('퀘스트 생성 중 문제가 발생했습니다. 다시 시도해주세요.');
-                });
-            });
-
-            function displayQuests(data) {
-                const questsGrid = document.getElementById('questsGrid');
-                let html = '';
-
-                if (data.quests && data.quests.length > 0) {
-                    data.quests.forEach((quest, index) => {
-                        const title = quest.mission_name || quest.location || `퀘스트 ${index + 1}`;
-                        const location = quest.location;
-                        const description = quest.description;
-                        const time = quest.expected_time;
-
-                        html += `
-                            <div class="quest-card">
-                                <div class="quest-number">${index + 1}</div>
-                                <div class="quest-content">
-                                    <h3 class="quest-title">📍 ${title}</h3>
-                                    
-                                    <div class="quest-detail quest-mission">
-                                        <span class="quest-detail-label">🎯 미션</span>
-                                        <div class="quest-detail-value">${title}</div>
-                                    </div>
-
-                                    ${location ? `
-                                    <div class="quest-detail">
-                                        <span class="quest-detail-label">📍 장소</span>
-                                        <div class="quest-detail-value">${location}</div>
-                                    </div>
-                                    ` : ''}
-
-                                    ${description ? `
-                                    <div class="quest-detail">
-                                        <span class="quest-detail-label">📝 설명</span>
-                                        <div class="quest-detail-value">${description}</div>
-                                    </div>
-                                    ` : ''}
-
-                                    ${time ? `
-                                    <div class="quest-detail">
-                                        <span class="quest-detail-label">⏱️ 예상 소요 시간</span>
-                                        <div class="quest-detail-value">${time}</div>
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        `;
-                    });
-
-                    html += `
-                        <div class="start-quest-section">
-                            <button type="button" class="start-quest-btn" onclick="alert('퀘스트 데이터를 저장하고 시작하는 기능은 추후 구현 예정입니다.');">
-                                🚀 퀘스트 시작하기
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    html = '<p style="text-align: center; font-size: 1.2rem; color: #98c1d9;">퀘스트를 생성할 수 없습니다. 다른 내용으로 시도해보세요.</p>';
-                }
-
-                questsGrid.innerHTML = html;
-                questsSection.style.display = 'block';
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const questForm = document.getElementById('questForm');
+        const questsSection = document.getElementById('questsSection');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const backBtn = document.getElementById('back-btn');
+        
+        // 뒤로가기 버튼 클릭 이벤트
+        backBtn.addEventListener('click', () => {
+            // 이전 페이지가 있으면 뒤로가기, 없으면 카테고리 페이지로
+            if (document.referrer && document.referrer.includes(window.location.origin)) {
+                window.history.back();
+            } else {
+                window.location.href = "/category";
             }
         });
-    </script>
+
+        questForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const questInput = document.querySelector('input[name="quest_input"]').value.trim();
+            if (!questInput) {
+                alert('퀘스트를 입력해주세요!');
+                return;
+            }
+
+            // Show loading
+            loadingOverlay.style.display = 'flex';
+
+            const payload = { question: questInput };
+
+            fetch('/api/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                loadingOverlay.style.display = 'none';
+                displayQuests(data);
+            })
+            .catch(error => {
+                loadingOverlay.style.display = 'none';
+                console.error("Error:", error);
+                alert('퀘스트 생성 중 문제가 발생했습니다. 다시 시도해주세요.');
+            });
+        });
+
+        function displayQuests(data) {
+            const questsGrid = document.getElementById('questsGrid');
+            let html = '';
+
+            if (data.quests && data.quests.length > 0) {
+                data.quests.forEach((quest, index) => {
+                    const title = quest.mission_name || quest.location || `퀘스트 ${index + 1}`;
+                    const location = quest.location;
+                    const description = quest.description;
+                    const time = quest.expected_time;
+
+                    html += `
+                        <div class="quest-card">
+                            <div class="quest-number">${index + 1}</div>
+                            <div class="quest-content">
+                                <h3 class="quest-title">📍 ${title}</h3>
+                                
+                                <div class="quest-detail quest-mission">
+                                    <span class="quest-detail-label">🎯 미션</span>
+                                    <div class="quest-detail-value">${title}</div>
+                                </div>
+
+                                ${location ? `
+                                <div class="quest-detail">
+                                    <span class="quest-detail-label">📍 장소</span>
+                                    <div class="quest-detail-value">${location}</div>
+                                </div>
+                                ` : ''}
+
+                                ${description ? `
+                                <div class="quest-detail">
+                                    <span class="quest-detail-label">📝 설명</span>
+                                    <div class="quest-detail-value">${description}</div>
+                                </div>
+                                ` : ''}
+
+                                ${time ? `
+                                <div class="quest-detail">
+                                    <span class="quest-detail-label">⏱️ 예상 소요 시간</span>
+                                    <div class="quest-detail-value">${time}</div>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // 동적 폼 생성 - AI 퀘스트 데이터를 서버로 전송
+                let dynamicFormHtml = '<form action="/api/start-quest" method="post" class="hidden-form" id="dynamicQuestForm">';
+                
+                data.quests.forEach((quest, index) => {
+                    const title = quest.mission_name || quest.location || `퀘스트 ${index + 1}`;
+                    const placeName = quest.location || title;
+                    const description = quest.description || `${title}에서의 특별한 모험`;
+                    const address = quest.address || quest.location || '서울특별시';
+                    // 좌표가 없으면 서울 중심지 좌표로 기본값 설정
+                    const lat = quest.lat || (37.5665 + Math.random() * 0.1 - 0.05); // 서울 중심 ± 약간의 랜덤
+                    const lng = quest.lng || (126.9780 + Math.random() * 0.1 - 0.05);
+                    
+                    dynamicFormHtml += `
+                        <input type="hidden" name="course_id_${index}" value="${index + 1}">
+                        <input type="hidden" name="mission_${index}" value="${title}">
+                        <input type="hidden" name="place_name_${index}" value="${placeName}">
+                        <input type="hidden" name="description_${index}" value="${description}">
+                        <input type="hidden" name="address_${index}" value="${address}">
+                        <input type="hidden" name="lat_${index}" value="${lat}">
+                        <input type="hidden" name="lng_${index}" value="${lng}">
+                    `;
+                });
+                
+                dynamicFormHtml += '</form>';
+
+                html += `
+                    ${dynamicFormHtml}
+                    <div class="start-quest-section">
+                        <button type="button" class="start-quest-btn" onclick="submitGeneratedQuests()">
+                            🚀 퀘스트 시작하기
+                        </button>
+                    </div>
+                `;
+            } else {
+                html = '<p style="text-align: center; font-size: 1.2rem; color: #98c1d9;">퀘스트를 생성할 수 없습니다. 다른 내용으로 시도해보세요.</p>';
+            }
+
+            questsGrid.innerHTML = html;
+            questsSection.style.display = 'block';
+        }
+
+        // AI로 생성된 퀘스트 데이터를 서버로 전송
+        function submitGeneratedQuests() {
+            const form = document.getElementById('dynamicQuestForm');
+            if (form) {
+                console.log('Submitting AI-generated quests to database...');
+                form.submit();
+            } else {
+                alert('퀘스트 데이터를 찾을 수 없습니다. 다시 시도해주세요.');
+            }
+        }
+    });
+</script>
 </body>
 </html>

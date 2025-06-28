@@ -24,12 +24,42 @@
     overflow: hidden;
   }
 
+  /* 뒤로가기 버튼 스타일 */
+  .back-button {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1000;
+    background: linear-gradient(145deg, #3d5a80, #1f4068);
+    color: #ffffff;
+    border: 2px solid #98c1d9;
+    border-radius: 12px;
+    padding: 12px 20px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    font-family: 'DotGothic16', sans-serif;
+  }
+
+  .back-button:hover {
+    background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
+  }
+
   .quest-course-container {
     display: flex;
     height: 100vh;
     background-color: #1a1a2e;
     gap: 20px;
     padding: 20px;
+    padding-top: 80px; /* 뒤로가기 버튼 공간 확보 */
   }
 
   .quest-list {
@@ -153,14 +183,65 @@
     filter: grayscale(50%);
   }
 
+  /* 완료된 퀘스트 강화 스타일 */
   .quest-card-ui.completed {
     border-color: #28a745;
-    background-color: #1a2e1a;
+    background: linear-gradient(135deg, #1a2e1a, #0f4132);
+    animation: completedGlow 3s ease-in-out infinite alternate;
+    position: relative;
+  }
+
+  @keyframes completedGlow {
+    from { box-shadow: 0 0 20px rgba(40, 167, 69, 0.4); }
+    to { box-shadow: 0 0 35px rgba(52, 206, 87, 0.7); }
+  }
+
+  .quest-card-ui.completed::after {
+    content: 'CLEARED';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #28a745;
+    text-shadow: 
+      2px 2px 0 #ffffff,
+      -2px -2px 0 #ffffff,
+      2px -2px 0 #ffffff,
+      -2px 2px 0 #ffffff,
+      0 0 20px rgba(40, 167, 69, 0.8);
+    pointer-events: none;
+    z-index: 10;
+    opacity: 0.9;
+    animation: clearBadgePulse 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes clearBadgePulse {
+    from { opacity: 0.7; transform: translate(-50%, -50%) rotate(-15deg) scale(0.95); }
+    to { opacity: 0.9; transform: translate(-50%, -50%) rotate(-15deg) scale(1.05); }
   }
 
   .quest-card-ui.completed .quest-number {
     background: linear-gradient(135deg, #28a745, #155724);
-    border-color: #28a745;
+    border-color: #34ce57;
+    animation: completedNumberPulse 2s ease-in-out infinite alternate;
+  }
+
+  @keyframes completedNumberPulse {
+    from { box-shadow: 0 0 15px rgba(40, 167, 69, 0.6); }
+    to { box-shadow: 0 0 25px rgba(52, 206, 87, 0.9); }
+  }
+
+  .quest-card-ui.completed .quest-title {
+    color: #34ce57;
+    text-shadow: 1px 1px #0d1b2a, 0 0 10px rgba(52, 206, 87, 0.5);
+  }
+
+  .quest-card-ui.completed .quest-mission {
+    background: linear-gradient(135deg, rgba(40, 167, 69, 0.2), rgba(21, 87, 36, 0.2));
+    border-left-color: #28a745;
+    color: #a8e6a3;
   }
 
   .map-container {
@@ -293,7 +374,7 @@
     transform: translateY(-2px);
   }
 
-  /* Additional animations for markers */
+  /* 마커 애니메이션 개선 */
   @keyframes markerPulse {
     0%, 100% { 
       transform: scale(1);
@@ -312,7 +393,7 @@
     }
     50% { 
       transform: scale(1.05);
-      box-shadow: 0 8px 30px rgba(52, 206, 87, 0.6);
+      box-shadow: 0 8px 30px rgba(52, 206, 87, 0.8);
     }
   }
 
@@ -324,6 +405,11 @@
 </style>
 </head>
 <body>
+
+<!-- 뒤로가기 버튼 -->
+<a href="/category" class="back-button">
+  ← 뒤로가기
+</a>
 
 <div class="quest-course-container">
   <aside class="quest-list">
@@ -363,6 +449,7 @@
 <script>
   document.addEventListener("DOMContentLoaded", function () {
     const steps = {{ steps | tojson | safe }};
+    
     console.log("Steps data:", steps);
     
     let map;
@@ -370,33 +457,6 @@
     let selectedQuestId = null;
 
     const completedQuests = JSON.parse(localStorage.getItem("completedQuests") || "[]");
-
-    // Add marker animation styles to head
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes markerPulse {
-        0%, 100% { 
-          transform: scale(1);
-          box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        }
-        50% { 
-          transform: scale(1.1);
-          box-shadow: 0 8px 30px rgba(152, 193, 217, 0.5);
-        }
-      }
-      
-      @keyframes clearedPulse {
-        0%, 100% { 
-          transform: scale(1);
-          box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
-        }
-        50% { 
-          transform: scale(1.05);
-          box-shadow: 0 8px 30px rgba(52, 206, 87, 0.6);
-        }
-      }
-    `;
-    document.head.appendChild(style);
 
     // Calculate map bounds to fit all markers
     function calculateMapBounds(steps) {
@@ -438,7 +498,7 @@
       zoom: 14
     });
 
-    // Fit map to bounds with 90% padding
+    // Fit map to bounds with padding
     if (mapConfig.bounds) {
       setTimeout(() => {
         map.fitBounds(mapConfig.bounds, {
@@ -450,35 +510,55 @@
       }, 100);
     }
 
-    // Create markers for each step
+    // Create markers for each step with enhanced cleared style
     steps.forEach(function(step, index) {
       console.log(`Step ${index}:`, step);
       if (step.lat && step.lng && step.lat !== 0 && step.lng !== 0) {
         const position = new naver.maps.LatLng(step.lat, step.lng);
         const isCleared = step.is_cleared === 1 || completedQuests.includes(step.id);
         
-        // Different marker styles based on cleared status
+        // Enhanced marker styles based on cleared status
         let markerContent;
         if (isCleared) {
           markerContent = `
             <div style="
               background: linear-gradient(135deg, #28a745, #155724);
-              border: 3px solid #34ce57;
+              border: 4px solid #34ce57;
               border-radius: 50%;
-              width: 45px;
-              height: 45px;
+              width: 55px;
+              height: 55px;
               display: flex;
               justify-content: center;
               align-items: center;
-              color: #e0fbfc;
+              color: #ffffff;
               font-weight: bold;
-              font-size: 1.4rem;
-              text-shadow: 1px 1px #0d1b2a;
-              box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+              font-size: 1.6rem;
+              text-shadow: 2px 2px #0d1b2a;
+              box-shadow: 
+                0 8px 25px rgba(40, 167, 69, 0.6),
+                inset 0 2px 0 rgba(255,255,255,0.3);
               animation: clearedPulse 2s ease-in-out infinite;
               transition: all 0.3s ease;
+              position: relative;
             ">
               ✓
+              <div style="
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                background: linear-gradient(45deg, #28a745, #34ce57);
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                width: 20px;
+                height: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.7rem;
+                font-weight: bold;
+                color: #ffffff;
+                animation: completedBadgeSpin 3s linear infinite;
+              ">C</div>
             </div>`;
         } else {
           markerContent = `
@@ -514,23 +594,42 @@
           }
         });
 
-        // Different info window content based on cleared status
+        // Enhanced info window content based on cleared status
         let infoContent;
         if (isCleared) {
           infoContent = `
             <div style="
               background: linear-gradient(135deg, #1b263b, #162447);
-              border: 2px solid #28a745;
+              border: 3px solid #28a745;
               border-radius: 12px;
-              padding: 15px 20px;
+              padding: 20px 25px;
               color: #e0fbfc;
               font-weight: bold;
-              box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-              min-width: 200px;
+              box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+              min-width: 220px;
               text-align: center;
+              position: relative;
             ">
-              <div style="font-size: 1.1rem; margin-bottom: 8px; color: #34ce57;">✓ ${step.title}</div>
-              <div style="font-size: 0.9rem; color: #98c1d9;">퀘스트 완료!</div>
+              <div style="
+                position: absolute;
+                top: -10px;
+                right: -10px;
+                background: linear-gradient(45deg, #28a745, #34ce57);
+                border: 2px solid #ffffff;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+                font-weight: bold;
+                color: #ffffff;
+                animation: completedBadgeSpin 3s linear infinite;
+              ">✓</div>
+              <div style="font-size: 1.2rem; margin-bottom: 10px; color: #34ce57;">✓ ${step.title}</div>
+              <div style="font-size: 1rem; color: #a8e6a3; font-weight: bold;">퀘스트 완료!</div>
+              <div style="font-size: 0.9rem; color: #ffffff; margin-top: 8px; opacity: 0.8;">훌륭하게 클리어했습니다!</div>
             </div>`;
         } else {
           infoContent = `
@@ -562,6 +661,27 @@
         markers[index] = null;
       }
     });
+
+    // Add CSS animations for completed badges
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes completedBadgeSpin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      
+      @keyframes clearedPulse {
+        0%, 100% { 
+          transform: scale(1);
+          box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6);
+        }
+        50% { 
+          transform: scale(1.05);
+          box-shadow: 0 12px 35px rgba(52, 206, 87, 0.9);
+        }
+      }
+    `;
+    document.head.appendChild(style);
 
     const cards = document.querySelectorAll(".quest-card-ui");
     const modal = document.getElementById("quest-modal");

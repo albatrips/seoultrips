@@ -23,6 +23,35 @@
             overflow-x: hidden;
         }
 
+        /* 뒤로가기 버튼 스타일 */
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(145deg, #3d5a80, #1f4068);
+            color: #ffffff;
+            border: 2px solid #98c1d9;
+            border-radius: 12px;
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-family: 'DotGothic16', sans-serif;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(145deg, #4a6fa5, #3d5a80);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(152, 193, 217, 0.4);
+        }
+
         /* Animated background */
         body::before {
             content: '';
@@ -49,6 +78,7 @@
             max-width: 1200px;
             margin: 0 auto;
             padding: 40px 20px;
+            padding-top: 80px; /* 뒤로가기 버튼 공간 확보 */
             position: relative;
         }
 
@@ -465,89 +495,106 @@
     </style>
 </head>
 <body>
-    <div class="main-container">
-        <div class="header-section">
-            <h1 class="header-title">추천 루트</h1>
-            <a href="/api/custom" class="direct-input-button">직접 원하는 장소 입력하기</a>
-        </div>
 
-        <div class="route-list-container">
-            {% if routes %}
-                {% for route in routes %}
-                <a href="/api/custom?set_id={{ route.set_id }}" class="route-card-link">
-                    <div class="route-card">
-                        <div class="route-info">
-                            <h2 class="route-title">{{ route.route_title }}</h2>
-                            <div class="course-container">
-                                {% for course in route.courses %}
-                                <div class="course-item">
-                                    <div class="course-circle" data-routetitle="{{ route.route_title }}" data-placename="{{ course.place_name }}">
-                                        <div class="course-number">{{ loop.index }}</div>
-                                        {{ course.place_name }}
-                                    </div>
+<!-- 뒤로가기 버튼 -->
+<button id="back-btn" class="back-button">
+    ← 뒤로가기
+</button>
+
+<div class="main-container">
+    <div class="header-section">
+        <h1 class="header-title">추천 루트</h1>
+        <a href="/api/custom" class="direct-input-button">직접 원하는 장소 입력하기</a>
+    </div>
+
+    <div class="route-list-container">
+        {% if routes %}
+            {% for route in routes %}
+            <a href="/api/custom?set_id={{ route.set_id }}" class="route-card-link">
+                <div class="route-card">
+                    <div class="route-info">
+                        <h2 class="route-title">{{ route.route_title }}</h2>
+                        <div class="course-container">
+                            {% for course in route.courses %}
+                            <div class="course-item">
+                                <div class="course-circle" data-routetitle="{{ route.route_title }}" data-placename="{{ course.place_name }}">
+                                    <div class="course-number">{{ loop.index }}</div>
+                                    {{ course.place_name }}
                                 </div>
-                                {% endfor %}
                             </div>
+                            {% endfor %}
                         </div>
-                        {% if route.total_estimated_time %}
-                        <div class="route-metadata">
-                            <div class="time-info">
-                                <div class="time-label">예상 소요 시간</div>
-                                <div class="time-value">{{ route.total_estimated_time }}</div>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
-                </a>
-                {% endfor %}
-            {% else %}
-                <div class="empty-state">
-                    추천할만한 루트를 찾지 못했어요.<br>다른 테마를 선택해보세요!
+                    {% if route.total_estimated_time %}
+                    <div class="route-metadata">
+                        <div class="time-info">
+                            <div class="time-label">예상 소요 시간</div>
+                            <div class="time-value">{{ route.total_estimated_time }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
-            {% endif %}
-        </div>
+            </a>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                추천할만한 루트를 찾지 못했어요.<br>다른 테마를 선택해보세요!
+            </div>
+        {% endif %}
     </div>
+</div>
 
-    <!-- Quest Detail Modal -->
-    <div id="questModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal()">&times;</span>
-            <h2 id="modalTitle"></h2>
-            <p id="modalPlace"></p>
-            <p>이 장소에서 멋진 퀘스트를 수행해보세요!</p>
-        </div>
+<!-- Quest Detail Modal -->
+<div id="questModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close-button" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <p id="modalPlace"></p>
+        <p>이 장소에서 멋진 퀘스트를 수행해보세요!</p>
     </div>
+</div>
 
-    <script>
-        const modal = document.getElementById('questModal');
-        const modalTitle = document.getElementById('modalTitle');
-        const modalPlace = document.getElementById('modalPlace');
+<script>
+    const modal = document.getElementById('questModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalPlace = document.getElementById('modalPlace');
+    const backBtn = document.getElementById('back-btn');
 
-        document.querySelectorAll('.course-circle').forEach(circle => {
-            circle.addEventListener('click', function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-                const routeTitle = this.dataset.routetitle;
-                const placeName = this.dataset.placename;
-                openModal(routeTitle, placeName);
-            });
+    // 뒤로가기 버튼 클릭 이벤트
+    backBtn.addEventListener('click', () => {
+        // 이전 페이지가 있으면 뒤로가기, 없으면 카테고리 페이지로
+        if (document.referrer && document.referrer.includes(window.location.origin)) {
+            window.history.back();
+        } else {
+            window.location.href = "/category";
+        }
+    });
+
+    document.querySelectorAll('.course-circle').forEach(circle => {
+        circle.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const routeTitle = this.dataset.routetitle;
+            const placeName = this.dataset.placename;
+            openModal(routeTitle, placeName);
         });
+    });
 
-        function openModal(routeTitle, placeName) {
-            modalTitle.textContent = routeTitle;
-            modalPlace.textContent = `장소: ${placeName}`;
-            modal.style.display = 'flex';
-        }
+    function openModal(routeTitle, placeName) {
+        modalTitle.textContent = routeTitle;
+        modalPlace.textContent = `장소: ${placeName}`;
+        modal.style.display = 'flex';
+    }
 
-        function closeModal() {
-            modal.style.display = 'none';
-        }
+    function closeModal() {
+        modal.style.display = 'none';
+    }
 
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
-            }
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            closeModal();
         }
-    </script>
+    }
+</script>
 </body>
 </html>

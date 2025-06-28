@@ -225,26 +225,35 @@ def get_max_quest_id():
 
 def create_quests(quests_data: list):
     if not quests_data:
+        print("No quests data provided to create_quests")
         return
+    
+    print(f"Creating {len(quests_data)} quests:")
+    for i, quest in enumerate(quests_data):
+        print(f"  Quest {i+1}: {quest.get('place_name', 'No name')} - {quest.get('mission', 'No mission')}")
+    
     conn = get_db_connection()
     if conn is None:
+        print("Database connection failed in create_quests")
         return
 
     try:
         cursor = conn.cursor()
         
-        # Get the next quest_id starting from max + 1
-        max_quest_id = get_max_quest_id()
-        next_quest_id = max_quest_id + 1
+        # Clear all existing quests first
+        print("Clearing all existing quests...")
+        cursor.execute("DELETE FROM quests")
+        
+        # Reset AUTO_INCREMENT to start from 1
+        cursor.execute("ALTER TABLE quests AUTO_INCREMENT = 1")
         
         query = """
-            INSERT INTO quests (quest_id, mission, place_name, description, is_cleared, address, lat, lng)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            INSERT INTO quests (mission, place_name, description, is_cleared, address, lat, lng)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         values = []
         for i, q in enumerate(quests_data):
             values.append((
-                next_quest_id + i,  # Use incremental quest_id
                 q.get('mission'), 
                 q.get('place_name'), 
                 q.get('description'), 
@@ -253,10 +262,19 @@ def create_quests(quests_data: list):
                 q.get('lat'), 
                 q.get('lng')
             ))
+            print(f"  Prepared quest {i+1}: {q.get('place_name')} at ({q.get('lat')}, {q.get('lng')})")
         
         cursor.executemany(query, values)
         conn.commit()
-        print(f"Created {len(values)} new quests starting from quest_id {next_quest_id}")
+        print(f"Successfully created {len(values)} new quests (replaced all existing quests)")
+        
+        # Verify the insertion
+        cursor.execute("SELECT quest_id, place_name FROM quests ORDER BY quest_id ASC")
+        all_quests = cursor.fetchall()
+        print("All quests in database after replacement:")
+        for quest in all_quests:
+            print(f"  quest_id: {quest[0]}, place_name: {quest[1]}")
+            
     except mysql.connector.Error as err:
         print(f"Error creating quests: {err}")
         conn.rollback()
@@ -268,30 +286,26 @@ def create_quests(quests_data: list):
 def get_all_quests():
     conn = get_db_connection()
     if conn is None:
+        print("Database connection failed, returning fallback data")
         # Return test data when database connection fails
         return [
             {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "is_cleared": 0, "lat": 37.579617, "lng": 126.977041},
             {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "is_cleared": 0, "lat": 37.580146, "lng": 126.976892},
             {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "is_cleared": 0, "lat": 37.5760, "lng": 126.9859}
         ]
+    
     try:
         cursor = conn.cursor(dictionary=True)
         
-        # Get the maximum quest_id first
-        cursor.execute("SELECT MAX(quest_id) FROM quests")
-        max_id_result = cursor.fetchone()
-        max_quest_id = max_id_result['MAX(quest_id)'] if max_id_result and max_id_result['MAX(quest_id)'] is not None else 0
-        
-        # Get the latest 3 quests (highest quest_ids) including is_cleared field
+        # Get all quests ordered by quest_id
         query = """
-            SELECT quest_id as id, place_name as title, description, mission, is_cleared, lat, lng 
+            SELECT quest_id as id, place_name as title, description, mission, is_cleared, lat, lng, address
             FROM quests 
-            WHERE quest_id > %s - 3
-            ORDER BY quest_id DESC
-            LIMIT 3
+            ORDER BY quest_id ASC
         """
-        cursor.execute(query, (max_quest_id,))
+        cursor.execute(query)
         result = cursor.fetchall()
+        print(f"Found {len(result)} quests in database")
         
         # Convert Decimal values to float
         for row in result:
@@ -299,16 +313,17 @@ def get_all_quests():
                 if isinstance(value, Decimal):
                     row[key] = float(value)
         
-        # Return test data if no data found in database
-        if not result:
+        if result:
+            print(f"Returning quests: {[q['title'] for q in result]}")
+            return result
+        else:
+            print("No quest results found, returning fallback data")
             return [
                 {"id": 1, "title": "경복궁 방문", "description": "경복궁에서 사진찍기", "mission": "궁궐의 아름다운 건축물과 함께 인증샷을 촬영해보세요!", "is_cleared": 0, "lat": 37.579617, "lng": 126.977041},
                 {"id": 2, "title": "북촌한옥마을 걷기", "description": "한옥마을에서 전통 문화 체험", "mission": "전통 한옥 거리를 걸으며 한국의 아름다운 전통을 느껴보세요!", "is_cleared": 0, "lat": 37.580146, "lng": 126.976892},
                 {"id": 3, "title": "인사동 카페 방문", "description": "전통 찻집에서 차 마시기", "mission": "전통 찻집에서 따뜻한 차 한 잔과 함께 여유로운 시간을 보내세요!", "is_cleared": 0, "lat": 37.5760, "lng": 126.9859}
             ]
-        
-        # Reverse to show in ascending order (1, 2, 3 instead of 3, 2, 1)
-        return list(reversed(result))
+            
     except mysql.connector.Error as err:
         print(f"Error fetching all quests: {err}")
         # Return test data when database query fails
